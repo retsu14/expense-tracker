@@ -1,0 +1,174 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root,
+.dark {
+  color-scheme: dark;
+  --bg: #141414;
+  --surface: #2a2a2a;
+  --surface-2: #333333;
+  --border: #3a3a3a;
+  --fg: #e8e2d6;
+  --fg-muted: #a19b90;
+  --accent: #e8e2d6;
+  --accent-fg: #141414;
+  --income: #8fb996;
+  --expense: #e09090;
+  --warning: #e3b96a;
+  --pig: #f4a7b9;
+  --pig-blush: #e8879e;
+  --ring: #e8e2d6;
+  --overlay: rgb(0 0 0 / 0.6);
+  --series-1: #3987e5;
+  --series-income: #199e70;
+  --series-expense: #d95926;
+  --heat-1: #104281;
+  --heat-2: #1c5cab;
+  --heat-3: #2a78d6;
+  --heat-4: #5598e7;
+  --heat-5: #9ec5f4;
+}
+
+.light {
+  color-scheme: light;
+  --bg: #f6f3ee;
+  --surface: #e8e2d6;
+  --surface-2: #ded7c9;
+  --border: #d2caba;
+  --fg: #141414;
+  --fg-muted: #5e5952;
+  --accent: #141414;
+  --accent-fg: #e8e2d6;
+  --income: #3f7a4a;
+  --expense: #b04a4a;
+  --warning: #9a6b12;
+  --ring: #141414;
+  --overlay: rgb(20 20 20 / 0.4);
+  --series-1: #2a78d6;
+  --series-income: #1baf7a;
+  --series-expense: #eb6834;
+  --heat-1: #cde2fb;
+  --heat-2: #9ec5f4;
+  --heat-3: #6da7ec;
+  --heat-4: #3987e5;
+  --heat-5: #1c5cab;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-fg-muted: var(--fg-muted);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-income: var(--income);
+  --color-expense: var(--expense);
+  --color-warning: var(--warning);
+  --color-pig: var(--pig);
+  --color-pig-blush: var(--pig-blush);
+  --color-ring: var(--ring);
+  --color-overlay: var(--overlay);
+  --color-series-1: var(--series-1);
+  --color-series-income: var(--series-income);
+  --color-series-expense: var(--series-expense);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-brand: var(--font-fredoka), var(--font-jakarta), ui-rounded, sans-serif;
+}
+
+@theme {
+  --text-display: 2.5rem;
+  --text-display--line-height: 2.75rem;
+  --text-display--letter-spacing: -0.01em;
+  --text-display--font-weight: 700;
+  --text-display-sm: 2rem;
+  --text-display-sm--line-height: 2.25rem;
+  --text-display-sm--letter-spacing: -0.01em;
+  --text-display-sm--font-weight: 700;
+  --text-h1: 1.75rem;
+  --text-h1--line-height: 2.125rem;
+  --text-h1--letter-spacing: -0.01em;
+  --text-h1--font-weight: 700;
+  --text-h1-sm: 1.5rem;
+  --text-h1-sm--line-height: 1.875rem;
+  --text-h1-sm--letter-spacing: -0.01em;
+  --text-h1-sm--font-weight: 700;
+  --text-h2: 1.25rem;
+  --text-h2--line-height: 1.75rem;
+  --text-h2--font-weight: 600;
+  --text-h3: 1.0625rem;
+  --text-h3--line-height: 1.5rem;
+  --text-h3--font-weight: 600;
+  --text-body: 1rem;
+  --text-body--line-height: 1.5rem;
+  --text-body-sm: 0.875rem;
+  --text-body-sm--line-height: 1.25rem;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1rem;
+  --text-caption--font-weight: 500;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  --ease-out-soft: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  --breakpoint-xl: 80rem;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-bg font-sans text-body text-fg antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  ::selection {
+    @apply bg-accent text-accent-fg;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply text-body;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+.amounts-hidden .tabular:not(.no-blur) {
+  filter: blur(6px);
+  user-select: none;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}

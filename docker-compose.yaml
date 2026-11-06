@@ -1,3 +1,5 @@
+name: expense-tracker
+
 services:
   frontend:
     build:
@@ -7,9 +9,13 @@ services:
     image: frontend
     init: true
     restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+      - path: .env.local
+        required: false
     environment:
       NODE_ENV: development
-      # NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
@@ -17,6 +23,12 @@ services:
       - ./:/app
       - frontend-node-modules:/app/node_modules
       - frontend-next-cache:/app/.next
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
 
 volumes:
   frontend-node-modules:
