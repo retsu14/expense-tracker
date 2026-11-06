@@ -4,6 +4,7 @@ import { ArrowRight, Plus, Split, Star, Trash2, X } from "lucide-react";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { SmartEntry } from "@/components/assistant/smart-entry";
 import { FormAlert } from "@/components/forms/form-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Segmented } from "@/components/ui/segmented";
 import { centavosToInput, formatPeso } from "@/lib/money";
 import { isNetworkError, offlineQueue } from "@/lib/offline-queue";
 import { cn } from "@/lib/utils";
+import type { EntryDraft } from "@/modules/assistant/domain/entry-parser";
 import { evaluateAmount, isExpression } from "@/modules/ledger/domain/amount-expression";
 import type { TransactionKind } from "@/modules/ledger/domain/transaction";
 import {
@@ -101,6 +103,34 @@ export function QuickAddForm({
     void suggestCategoryAction(kind, note).then((id) => {
       if (id) setCategoryId(id);
     });
+  };
+
+  const entryContext = useMemo(
+    () => ({
+      today: ctx.today,
+      categories: ctx.categories,
+      accounts: ctx.accounts.filter((a) => !a.archived),
+    }),
+    [ctx],
+  );
+
+  const applyDraft = (d: EntryDraft) => {
+    const k = d.kind === "transfer" && ctx.accounts.length < 2 ? "expense" : d.kind;
+    if (k !== kind) changeKind(k);
+    if (d.amount) setAmount(d.amount);
+    if (d.accountId) setAccountId(d.accountId);
+    if (k === "transfer" && d.toAccountId) setToAccountId(d.toAccountId);
+    if (d.date) setDate(d.date);
+    if (d.note) setNote(d.note);
+    if (k !== "transfer" && d.categoryId) {
+      setCategoryId(d.categoryId);
+      setCategoryTouched(true);
+    } else if (k !== "transfer" && d.note.trim().length >= 2) {
+      void suggestCategoryAction(k, d.note).then((id) => {
+        if (id) setCategoryId(id);
+      });
+    }
+    if (!d.amount) amountRef.current?.focus();
   };
 
   const payload = () => ({
@@ -302,6 +332,8 @@ export function QuickAddForm({
           ...(ctx.accounts.length > 1 ? [{ value: "transfer" as const, label: "Transfer" }] : []),
         ]}
       />
+
+      {!editing && !splitting && <SmartEntry context={entryContext} onApply={applyDraft} />}
 
       {!editing && templates.length > 0 && (
         <div className="grid gap-2">

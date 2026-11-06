@@ -128,6 +128,15 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - App lock: `src/lib/app-lock.ts` (PBKDF2-SHA256 150k, per-user key in localStorage, device-only), `AppLock` overlay (keypad, 5 tries → 30s cooldown, "Forgot PIN? Sign out"), relocks on fresh session or after 5 min hidden; toggle in Settings → Security.
 - Deferred: receipt photos (needs R2 CORS), web push + daily reminder (needs VAPID keys + a scheduler), WebAuthn biometrics.
 
+## Local AI notes (Phase 8)
+
+- Module `src/modules/assistant`: pure domain (`models.ts` catalog, `entry-parser.ts` rule NL parser with PH keyword map, `snapshot.ts` stats snapshot → prompt text + `ruleTips`, `prompts.ts` port/prompts/AI-output parsing). Client adapters in `infrastructure/`: `webllm.ts` (+ `webllm.worker.ts`, lazy import, singleton engine, load/cancel/remove, generate queue) and `ollama.ts` (status, pull NDJSON progress, delete, chat stream; auto CPU fallback `num_gpu:0` when the GPU runner crashes).
+- Server: `assistantSnapshot` (application, server-only) built from `insights("month")` + goals/debts/accounts/bills; `assistantSnapshotAction`. AI never sees raw rows, only computed totals.
+- WebLLM picks q4f16 builds when the GPU has `shader-f16`, else q4f32 (`webllmId`). Dev GPU (GTX 1050 Ti) needs f32.
+- Store `useAssistantStore` (persisted `oink-assistant`: enabled, provider, models, Ollama URL, last 40 chat msgs per owner). Hook `useAssistant` gives provider + loading progress.
+- UI: Settings → AI card (`ai-settings.tsx`, model picker/download/cancel/remove, Ollama connect + pull + custom name + OLLAMA_ORIGINS help, cloud models flagged), `/assistant` chat (suggestions, streaming, stop, clear, AI-off = CTA + rule tips), Insights "<pig>'s take" card (rule tips + cached AI monthly check-in), quick-add "Type it" (rule parse, AI JSON fills gaps; rule values win for amount/date/wallet/note), Home "Ask <pig>" chip, sidebar "Ask Oink".
+- Fixed: Devices "N minutes ago" hydration mismatch (suppressHydrationWarning).
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -139,7 +148,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 5 Insights
 - [x] 6 PWA
 - [x] 7 P1 pack (receipts + push deferred)
-- [ ] 8 Local AI
+- [x] 8 Local AI
 - [ ] 9 Hardening
 
 ## Log
@@ -155,3 +164,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 4 committed 84ef6ff. Phase 5 done: Insights page with validated charts + table views, cash-flow forecast, CSV/JSON export, delete account, hide amounts, Ctrl/⌘K command palette. 59 tests. E2E verified on Neon (numbers, exports, palette, hide, delete cascade).
 - 2026-11-06 — Phase 5 committed 24302b9. Phase 6 done: manifest + pig icons + shortcuts, service worker + offline page, offline quick-add queue with auto-sync, install prompt (Android/desktop + iOS help), security headers. 61 tests. Offline queue verified end-to-end (saved offline, synced once on reconnect).
 - 2026-11-06 — Phase 6 committed 482172a. Phase 7 done: debts/utang, split transactions, bulk actions, saved views, calendar, CSV import, monthly recap, PIN app lock. 67 tests. E2E verified on Neon. Receipts + push deferred. Not committed yet.
+- 2026-11-06 — Phase 7 committed 7ab5fec. Phase 8 done: optional local AI (WebLLM + Ollama), chat, insights check-in, natural-language quick entry, rule tips. 80 tests. Verified WebLLM (SmolLM2 f32) + Ollama (qwen2.5:0.5b, CPU fallback) end to end; test models removed. Not committed yet.

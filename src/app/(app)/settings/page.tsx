@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { AiSettings } from "@/components/assistant/ai-settings";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { AppLockSettings } from "@/components/settings/app-lock-settings";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
@@ -78,6 +79,13 @@ export default async function SettingsPage() {
             <CardTitle>{user.pigName}</CardTitle>
           </CardHeader>
           <MascotSettings />
+        </Card>
+
+        <Card id="ai">
+          <CardHeader>
+            <CardTitle>AI</CardTitle>
+          </CardHeader>
+          <AiSettings pigName={user.pigName} />
         </Card>
 
         <Card>

@@ -133,6 +133,8 @@ export async function insights(deps: AnalyticsDeps, userId: string, preset: Insi
     biggest,
     tags,
     budgets: overview.items,
+    safe: overview.safe,
+    nextPayday: overview.nextPayday,
     forecast,
   };
 }

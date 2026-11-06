@@ -1,4 +1,4 @@
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, MessageCircleHeart } from "lucide-react";
 import Link from "next/link";
 
 import { RecentTransactions } from "@/components/activity/recent-transactions";
@@ -68,13 +68,20 @@ export default async function HomePage() {
     <>
       <PageHeader title="Home" description="Your money at a glance." />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
-        <Card className="flex items-center justify-center overflow-visible lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
+        <Card className="flex flex-col items-center justify-center gap-3 overflow-visible lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
           <HomePig
             name={user.displayName}
             pigName={user.pigName}
             budgetUsedPct={overview.usedPct}
             alertPct={overview.alertPct}
           />
+          <Link
+            href="/assistant"
+            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 text-body-sm font-medium transition-colors duration-120 hover:bg-surface-2"
+          >
+            <MessageCircleHeart className="size-4 text-pig" aria-hidden />
+            Ask {user.pigName}
+          </Link>
         </Card>
 
         <Card className="lg:col-span-8 lg:row-start-1">

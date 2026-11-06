@@ -48,7 +48,7 @@ export function SessionsList({ sessions }: { sessions: SessionView[] }) {
                     </span>
                   )}
                 </p>
-                <p className="text-caption font-normal text-fg-muted">
+                <p className="text-caption font-normal text-fg-muted" suppressHydrationWarning>
                   Active {relativeTime(new Date(s.lastSeenAt))}
                 </p>
               </div>

@@ -9,6 +9,7 @@ import {
   SpendingCalendar,
   WeekdayChart,
 } from "@/components/insights/charts";
+import { OinkTakeCard } from "@/components/assistant/oink-take-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { Amount } from "@/components/ledger/amount";
 import { CategoryIcon } from "@/components/ledger/category-icon";
@@ -140,6 +141,8 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
             <Amount value={k.forecast} />
           </Kpi>
         </section>
+
+        {data.preset === "month" && <OinkTakeCard userId={user.id} pigName={user.pigName} />}
 
         <div className="lg:col-span-7">
           <CategoryBreakdown categories={data.categories} />
