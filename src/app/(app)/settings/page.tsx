@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
+import { AppLockSettings } from "@/components/settings/app-lock-settings";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { InstallAppRow } from "@/components/pwa/install-prompt";
 import { DataSettings } from "@/components/settings/data-settings";
@@ -87,6 +88,9 @@ export default async function SettingsPage() {
             <ChangePasswordForm />
             <div className="border-t border-border pt-5">
               <RecoveryCodesCard remaining={remainingCodes} username={user.username} />
+            </div>
+            <div className="border-t border-border pt-5">
+              <AppLockSettings userId={user.id} />
             </div>
           </div>
         </Card>

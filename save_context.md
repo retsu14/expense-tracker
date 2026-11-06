@@ -117,6 +117,17 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Install: `usePwaStore` captures `beforeinstallprompt`; `InstallPrompt` banner after 2nd visit (14-day snooze), iOS shows Share → Add to Home Screen sheet; Settings → Appearance has `InstallAppRow`.
 - Testing: SW registration can't run in the embedded Claude browser ("unknown error"); verify SW in real Chrome/Safari. Offline queue verified by stopping a local `next start -p 3100` server.
 
+## P1 pack notes (Phase 7)
+
+- Migration 0003: debts, debt_payments (planning), saved_filters + transactions.split_group (ledger), category `system` now `fees | debt_out | debt_in` ("Utang payments"/"Utang collected", created lazily via `ensureSystemCategory`).
+- Debts (`planning/domain/debt.ts`, `debts.use-cases.ts`, `/plan/debts`): I lent / I borrowed, due date, payments (optionally recorded to a wallet as income/expense in the utang system categories), auto-settle at 0, manual settle, delete settled.
+- Split: `createSplitTransaction` writes N independent expense rows sharing `splitGroup` (idempotency `<key>:<i>`), so every aggregate stays correct; rows show "Split" and edit individually. Quick-add "Split" chip → SplitEditor (category + amount math per part).
+- Activity: Select mode + `BulkBar` (recategorize only when all selected share a kind, move wallet, delete with undo; transfers/fee rows not selectable). Saved views (`saved-views.tsx`, max 12, stored as canonical URL params).
+- `/activity/calendar?m=YYYY-MM` month grid (daily spent/earned, tap → that day). `/import` CSV wizard: pure `domain/csv-import.ts` (quotes, ; or , delimiter, BOM, ymd/dmy/mdy, (neg) amounts, column guessing), batches of 100, deterministic `imp:<hash>` idempotency so re-imports skip.
+- `/insights/recap?m=YYYY-MM` "Oink recap": totals, saved %, top category, biggest day/buy, no-spend days, tags, pig verdict, Web Share/clipboard.
+- App lock: `src/lib/app-lock.ts` (PBKDF2-SHA256 150k, per-user key in localStorage, device-only), `AppLock` overlay (keypad, 5 tries → 30s cooldown, "Forgot PIN? Sign out"), relocks on fresh session or after 5 min hidden; toggle in Settings → Security.
+- Deferred: receipt photos (needs R2 CORS), web push + daily reminder (needs VAPID keys + a scheduler), WebAuthn biometrics.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -127,7 +138,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [x] 5 Insights
 - [x] 6 PWA
-- [ ] 7 P1 pack
+- [x] 7 P1 pack (receipts + push deferred)
 - [ ] 8 Local AI
 - [ ] 9 Hardening
 
@@ -143,3 +154,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 3 committed c030bb7. Phase 4 done: budgets (monthly/pay cycle, rollover, alerts, suggestions, safe-to-spend), bills & recurring (mark paid/skip, auto-post, reminders), goals (contributions, auto-complete), notification center + bell, budget alert toasts, Home planning widgets, pig mood from budgets. 51 tests. E2E verified on Neon.
 - 2026-11-06 — Phase 4 committed 84ef6ff. Phase 5 done: Insights page with validated charts + table views, cash-flow forecast, CSV/JSON export, delete account, hide amounts, Ctrl/⌘K command palette. 59 tests. E2E verified on Neon (numbers, exports, palette, hide, delete cascade).
 - 2026-11-06 — Phase 5 committed 24302b9. Phase 6 done: manifest + pig icons + shortcuts, service worker + offline page, offline quick-add queue with auto-sync, install prompt (Android/desktop + iOS help), security headers. 61 tests. Offline queue verified end-to-end (saved offline, synced once on reconnect).
+- 2026-11-06 — Phase 6 committed 482172a. Phase 7 done: debts/utang, split transactions, bulk actions, saved views, calendar, CSV import, monthly recap, PIN app lock. 67 tests. E2E verified on Neon. Receipts + push deferred. Not committed yet.

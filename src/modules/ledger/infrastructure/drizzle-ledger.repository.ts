@@ -27,7 +27,14 @@ import type { Transaction, TransactionView } from "@/modules/ledger/domain/trans
 import type { ResolvedFilter } from "@/modules/ledger/domain/transaction-query";
 import type { Db } from "@/shared/db/client";
 
-import { accounts, categories, templates, transactions, userSettings } from "./ledger.schema";
+import {
+  accounts,
+  categories,
+  savedFilters,
+  templates,
+  transactions,
+  userSettings,
+} from "./ledger.schema";
 
 const toAccounts = alias(accounts, "to_accounts");
 
@@ -44,6 +51,7 @@ const toTx = (r: TxRow): Transaction => ({
   toAccountId: r.toAccountId,
   categoryId: r.categoryId,
   linkedId: r.linkedId,
+  splitGroup: r.splitGroup,
   occurredAt: r.occurredAt,
   note: r.note,
   tags: r.tags,
@@ -539,6 +547,50 @@ export function drizzleLedgerRepository(db: Db): LedgerRepository {
         .orderBy(desc(count()))
         .limit(1);
       return row?.id ?? null;
+    },
+
+    async bulkUpdate(userId, ids, patch, kind) {
+      if (!ids.length) return 0;
+      const rows = await db
+        .update(transactions)
+        .set(patch)
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            inArray(transactions.id, ids),
+            isNull(transactions.deletedAt),
+            isNull(transactions.linkedId),
+            kind ? eq(transactions.kind, kind) : ne(transactions.kind, "transfer"),
+          ),
+        )
+        .returning({ id: transactions.id });
+      return rows.length;
+    },
+
+    async listSavedFilters(userId) {
+      const rows = await db
+        .select()
+        .from(savedFilters)
+        .where(eq(savedFilters.userId, userId))
+        .orderBy(asc(savedFilters.createdAt));
+      return rows.map((r) => ({ id: r.id, name: r.name, params: r.params }));
+    },
+    async createSavedFilter(f) {
+      await db.insert(savedFilters).values(f);
+    },
+    async deleteSavedFilter(userId, id) {
+      const rows = await db
+        .delete(savedFilters)
+        .where(and(eq(savedFilters.userId, userId), eq(savedFilters.id, id)))
+        .returning({ id: savedFilters.id });
+      return rows.length > 0;
+    },
+    async countSavedFilters(userId) {
+      const [row] = await db
+        .select({ n: count() })
+        .from(savedFilters)
+        .where(eq(savedFilters.userId, userId));
+      return row?.n ?? 0;
     },
 
     async listTemplates(userId) {

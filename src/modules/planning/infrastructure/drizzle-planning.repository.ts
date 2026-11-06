@@ -3,6 +3,7 @@ import "server-only";
 import { and, asc, count, desc, eq, gte, isNull, lte, sql } from "drizzle-orm";
 
 import type { Budget } from "@/modules/planning/domain/budget";
+import type { Debt } from "@/modules/planning/domain/debt";
 import type { Goal } from "@/modules/planning/domain/goal";
 import type { PlanningRepository } from "@/modules/planning/domain/ports";
 import type { Recurring } from "@/modules/planning/domain/recurring";
@@ -10,6 +11,8 @@ import type { Db } from "@/shared/db/client";
 
 import {
   budgets,
+  debtPayments,
+  debts,
   goalContributions,
   goals,
   notifications,
@@ -54,7 +57,22 @@ const toGoal = (r: typeof goals.$inferSelect): Goal => ({
   completedAt: r.completedAt,
 });
 
+const toDebt = (r: typeof debts.$inferSelect): Debt => ({
+  id: r.id,
+  userId: r.userId,
+  direction: r.direction,
+  person: r.person,
+  principal: r.principal,
+  dueDate: r.dueDate,
+  note: r.note,
+  settledAt: r.settledAt,
+});
+
 export function drizzlePlanningRepository(db: Db): PlanningRepository {
+  const paidSql =
+    sql<number>`coalesce((select sum(p.amount) from debt_payments p where p.debt_id = ${sql.raw('"debts"."id"')}), 0)`.mapWith(
+      Number,
+    );
   const savedSql =
     sql<number>`coalesce((select sum(c.amount) from goal_contributions c where c.goal_id = ${sql.raw('"goals"."id"')}), 0)`.mapWith(
       Number,
@@ -202,6 +220,43 @@ export function drizzlePlanningRepository(db: Db): PlanningRepository {
     },
     async addContribution(c) {
       await db.insert(goalContributions).values(c);
+    },
+
+    async listDebts(userId) {
+      const rows = await db
+        .select({ debt: debts, paid: paidSql })
+        .from(debts)
+        .where(eq(debts.userId, userId))
+        .orderBy(asc(debts.createdAt));
+      return rows.map((r) => ({ ...toDebt(r.debt), paid: r.paid }));
+    },
+    async getDebt(userId, id) {
+      const [row] = await db
+        .select({ debt: debts, paid: paidSql })
+        .from(debts)
+        .where(and(eq(debts.userId, userId), eq(debts.id, id)));
+      return row ? { ...toDebt(row.debt), paid: row.paid } : null;
+    },
+    async createDebt(debt) {
+      await db.insert(debts).values(debt);
+    },
+    async updateDebt(userId, id, patch) {
+      const rows = await db
+        .update(debts)
+        .set(patch)
+        .where(and(eq(debts.userId, userId), eq(debts.id, id)))
+        .returning({ id: debts.id });
+      return rows.length > 0;
+    },
+    async deleteDebt(userId, id) {
+      const rows = await db
+        .delete(debts)
+        .where(and(eq(debts.userId, userId), eq(debts.id, id)))
+        .returning({ id: debts.id });
+      return rows.length > 0;
+    },
+    async addDebtPayment(p) {
+      await db.insert(debtPayments).values(p);
     },
 
     async listNotifications(userId, limit) {

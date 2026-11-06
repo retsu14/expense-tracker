@@ -14,6 +14,7 @@ export type Transaction = {
   toAccountId: string | null;
   categoryId: string | null;
   linkedId: string | null;
+  splitGroup: string | null;
   occurredAt: Date;
   note: string;
   tags: string[];

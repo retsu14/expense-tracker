@@ -1,10 +1,11 @@
 "use client";
 
-import { ArrowRightLeft, Trash2 } from "lucide-react";
+import { ArrowRightLeft, Check, Trash2 } from "lucide-react";
 import { motion, useMotionValue, useTransform } from "motion/react";
 
 import { Amount } from "@/components/ledger/amount";
 import { CategoryIcon } from "@/components/ledger/category-icon";
+import { cn } from "@/lib/utils";
 import type { TransactionView } from "@/modules/ledger/domain/transaction";
 
 const SWIPE_DELETE = -96;
@@ -15,23 +16,32 @@ export function transactionTitle(t: TransactionView) {
   return t.categoryName ?? "Transaction";
 }
 
+type RowProps = {
+  tx: TransactionView;
+  time: string;
+  onOpen: () => void;
+  onDelete: () => void;
+  selecting?: boolean;
+  selected?: boolean;
+  onToggle?: () => void;
+};
+
 export function TransactionRow({
   tx,
   time,
   onOpen,
   onDelete,
-}: {
-  tx: TransactionView;
-  time: string;
-  onOpen: () => void;
-  onDelete: () => void;
-}) {
+  selecting = false,
+  selected = false,
+  onToggle,
+}: RowProps) {
   const x = useMotionValue(0);
   const reveal = useTransform(x, [0, SWIPE_DELETE], [0, 1]);
   const subtitle =
     tx.kind === "transfer"
       ? `Transfer · ${tx.accountName} → ${tx.toAccountName ?? "?"}`
-      : `${tx.categoryName ?? "Uncategorized"} · ${tx.accountName}`;
+      : `${tx.categoryName ?? "Uncategorized"} · ${tx.accountName}${tx.splitGroup ? " · Split" : ""}`;
+  const selectable = selecting && !tx.linkedId && tx.kind !== "transfer";
 
   return (
     <li className="relative overflow-hidden">
@@ -43,7 +53,7 @@ export function TransactionRow({
         <Trash2 className="size-5" />
       </motion.div>
       <motion.div
-        drag="x"
+        drag={selecting ? false : "x"}
         dragDirectionLock
         dragConstraints={{ left: SWIPE_DELETE * 1.4, right: 0 }}
         dragElastic={{ left: 0.2, right: 0 }}
@@ -52,13 +62,29 @@ export function TransactionRow({
         onDragEnd={(_, info) => {
           if (info.offset.x < SWIPE_DELETE) onDelete();
         }}
-        className="group relative flex items-center gap-3 bg-surface px-4 py-3"
+        className={cn(
+          "group relative flex items-center gap-3 bg-surface px-4 py-3",
+          selected && "bg-surface-2",
+        )}
       >
         <button
           type="button"
-          onClick={onOpen}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-md text-left"
+          onClick={selecting ? onToggle : onOpen}
+          disabled={selecting && !selectable}
+          aria-pressed={selecting ? selected : undefined}
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-md text-left disabled:cursor-not-allowed disabled:opacity-50"
         >
+          {selecting && (
+            <span
+              aria-hidden
+              className={cn(
+                "flex size-5 shrink-0 items-center justify-center rounded-[6px] border-2",
+                selected ? "border-accent bg-accent text-accent-fg" : "border-fg-muted",
+              )}
+            >
+              {selected && <Check className="size-3.5" strokeWidth={3} />}
+            </span>
+          )}
           {tx.kind === "transfer" ? (
             <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-fg-muted">
               <ArrowRightLeft className="size-5" aria-hidden />
@@ -79,14 +105,16 @@ export function TransactionRow({
             className="font-semibold"
           />
         </button>
-        <button
-          type="button"
-          onClick={onDelete}
-          aria-label={`Delete ${transactionTitle(tx)}`}
-          className="hidden size-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-fg-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-surface-2 hover:text-expense focus-visible:opacity-100 md:flex"
-        >
-          <Trash2 className="size-4" aria-hidden />
-        </button>
+        {!selecting && (
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label={`Delete ${transactionTitle(tx)}`}
+            className="hidden size-9 shrink-0 cursor-pointer items-center justify-center rounded-md text-fg-muted opacity-0 transition-opacity group-hover:opacity-100 hover:bg-surface-2 hover:text-expense focus-visible:opacity-100 md:flex"
+          >
+            <Trash2 className="size-4" aria-hidden />
+          </button>
+        )}
       </motion.div>
     </li>
   );

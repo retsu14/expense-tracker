@@ -14,7 +14,15 @@ export type NewTransaction = Omit<Transaction, "createdAt" | "deletedAt"> & {
 export type TransactionPatch = Partial<
   Pick<
     Transaction,
-    "kind" | "amount" | "accountId" | "toAccountId" | "categoryId" | "occurredAt" | "note" | "tags"
+    | "kind"
+    | "amount"
+    | "accountId"
+    | "toAccountId"
+    | "categoryId"
+    | "splitGroup"
+    | "occurredAt"
+    | "note"
+    | "tags"
   >
 >;
 
@@ -23,6 +31,8 @@ export type ChangeSet = {
   update?: { id: string; patch: TransactionPatch }[];
   hardDelete?: string[];
 };
+
+export type SavedFilter = { id: string; name: string; params: Record<string, string> };
 
 export type Summary = { count: number; expense: number; income: number };
 export type DayTotal = { day: Ymd; expense: number; income: number };
@@ -81,6 +91,18 @@ export type LedgerRepository = {
     kind: "expense" | "income",
     note: string,
   ): Promise<string | null>;
+
+  bulkUpdate(
+    userId: string,
+    ids: string[],
+    patch: { categoryId?: string; accountId?: string },
+    kind: "expense" | "income" | null,
+  ): Promise<number>;
+
+  listSavedFilters(userId: string): Promise<SavedFilter[]>;
+  createSavedFilter(filter: SavedFilter & { userId: string }): Promise<void>;
+  deleteSavedFilter(userId: string, id: string): Promise<boolean>;
+  countSavedFilters(userId: string): Promise<number>;
 
   listTemplates(userId: string): Promise<Template[]>;
   countTemplates(userId: string): Promise<number>;

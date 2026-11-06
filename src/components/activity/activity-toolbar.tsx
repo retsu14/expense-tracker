@@ -14,16 +14,19 @@ import {
   PERIOD_LABEL,
   type TransactionFilter,
 } from "@/modules/ledger/domain/transaction-query";
+import type { SavedFilter } from "@/modules/ledger/domain/ports";
 
 import { FilterSheet, type FilterOption } from "./filter-sheet";
+import { SavedViews } from "./saved-views";
 
 type Props = {
   filter: TransactionFilter;
   accounts: { id: string; name: string; color: string }[];
   categories: FilterOption[];
+  views: SavedFilter[];
 };
 
-export function ActivityToolbar({ filter, accounts, categories }: Props) {
+export function ActivityToolbar({ filter, accounts, categories, views }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const [q, setQ] = useState(filter.q);
@@ -146,6 +149,8 @@ export function ActivityToolbar({ filter, accounts, categories }: Props) {
           )}
         </Button>
       </div>
+
+      <SavedViews views={views} filter={filter} />
 
       {chips.length > 0 && (
         <div className="flex flex-wrap items-center gap-2" aria-busy={pending}>

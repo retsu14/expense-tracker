@@ -1,4 +1,4 @@
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -81,12 +81,20 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
         title="Insights"
         description="Where your money goes."
         actions={
-          <Button asChild variant="secondary" size="sm">
-            <a href={`/api/export/transactions?from=${range.start}&to=${range.end}`} download>
-              <Download aria-hidden />
-              Export CSV
-            </a>
-          </Button>
+          <>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/insights/recap">
+                <Sparkles aria-hidden />
+                Monthly recap
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="sm">
+              <a href={`/api/export/transactions?from=${range.start}&to=${range.end}`} download>
+                <Download aria-hidden />
+                Export CSV
+              </a>
+            </Button>
+          </>
         }
       />
 

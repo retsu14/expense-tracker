@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { AppLock } from "@/components/pwa/app-lock";
 import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineSync } from "@/components/pwa/offline-sync";
 
@@ -49,6 +50,7 @@ export function AppShell({
       <BottomNav />
       <QuickAddModal userId={user.id} />
       <InstallPrompt />
+      <AppLock userId={user.id} />
       <KeyboardShortcuts />
     </div>
   );
