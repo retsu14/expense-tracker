@@ -27,7 +27,8 @@ import {
 import { parseFilterParams } from "@/modules/ledger/domain/transaction-query";
 import { requireUser } from "@/modules/identity/presentation/dal";
 import { runAction } from "@/shared/action";
-import { ledgerDeps } from "@/shared/container";
+import { checkBudgetAlerts } from "@/modules/planning/application/planning.use-cases";
+import { ledgerDeps, planningDeps } from "@/shared/container";
 import { ok, type Result } from "@/shared/kernel/result";
 
 async function mutate<T>(fn: (userId: string) => Promise<Result<T>>) {
@@ -52,11 +53,20 @@ export async function skipOnboardingAction() {
 }
 
 export async function createTransactionAction(input: unknown) {
-  return mutate((uid) => createTransaction(ledgerDeps(), uid, input));
+  return mutate(async (uid) => {
+    const res = await createTransaction(ledgerDeps(), uid, input);
+    if (!res.ok || res.value.duplicate) return res.ok ? ok({ ...res.value, alerts: [] }) : res;
+    const alerts = await checkBudgetAlerts(planningDeps(), uid).catch(() => []);
+    return ok({ ...res.value, alerts });
+  });
 }
 
 export async function updateTransactionAction(id: string, input: unknown) {
-  return mutate((uid) => updateTransaction(ledgerDeps(), uid, id, input));
+  return mutate(async (uid) => {
+    const res = await updateTransaction(ledgerDeps(), uid, id, input);
+    if (res.ok) await checkBudgetAlerts(planningDeps(), uid).catch(() => []);
+    return res;
+  });
 }
 
 export async function deleteTransactionsAction(ids: string[]) {

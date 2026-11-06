@@ -9,8 +9,9 @@ import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
 import { isActive, primaryNav, secondaryNav } from "./nav-items";
+import { NotificationBell } from "./notification-bell";
 
-export function NavRail() {
+export function NavRail({ unread }: { unread: number }) {
   const pathname = usePathname();
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
 
@@ -19,6 +20,7 @@ export function NavRail() {
       <Link href="/" aria-label="Oink home" className="rounded-md p-1">
         <PigMark className="size-9" />
       </Link>
+      <NotificationBell unread={unread} className="mt-2" />
       <button
         type="button"
         aria-label="Add transaction"

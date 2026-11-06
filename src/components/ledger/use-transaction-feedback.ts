@@ -47,3 +47,14 @@ export function useUndoableDelete() {
     return true;
   };
 }
+
+export function showBudgetAlerts(alerts: { title: string; body: string; level: 1 | 2 }[]) {
+  if (!alerts.length) return;
+  const worst = alerts.reduce((m, a) => Math.max(m, a.level), 0);
+  setTimeout(() => {
+    const { setMood, say } = useMascotStore.getState();
+    setMood(worst === 2 ? "sad" : "worried");
+    say(worst === 2 ? "Uh oh, we're over budget…" : "Careful, budget's getting tight!");
+    for (const a of alerts) toast.warning(a.title, { description: a.body, duration: 8000 });
+  }, 2600);
+}

@@ -24,7 +24,7 @@ import { addDays, toYmd } from "@/shared/kernel/time";
 
 import { CategoryIcon } from "./category-icon";
 import { Chip } from "./chip";
-import { celebrateLog, useUndoableDelete } from "./use-transaction-feedback";
+import { celebrateLog, showBudgetAlerts, useUndoableDelete } from "./use-transaction-feedback";
 
 export type QuickAddContext = Awaited<ReturnType<typeof quickAddContextAction>>;
 
@@ -130,6 +130,7 @@ export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: ()
         return;
       }
       celebrateLog(logged, kind);
+      if (res.data && typeof res.data === "object") showBudgetAlerts(res.data.alerts);
       const createdId = res.data && typeof res.data === "object" ? res.data.id : null;
       toast.success(
         `${kind === "income" ? "Income" : kind === "transfer" ? "Transfer" : "Expense"} saved · ${formatPeso(logged)}`,
@@ -167,6 +168,7 @@ export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: ()
       }
       onDone();
       celebrateLog(t.amount, t.kind);
+      showBudgetAlerts(res.data.alerts);
       const id = res.data.id;
       toast.success(`${t.name} · ${formatPeso(t.amount)} logged`, {
         duration: 6000,

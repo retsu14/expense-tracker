@@ -2,6 +2,8 @@ import "server-only";
 
 import type { IdentityDeps } from "@/modules/identity/application/deps";
 import type { LedgerDeps } from "@/modules/ledger/application/deps";
+import type { PlanningDeps } from "@/modules/planning/application/planning.use-cases";
+import { drizzlePlanningRepository } from "@/modules/planning/infrastructure/drizzle-planning.repository";
 import { argon2Hasher, cryptoTokens } from "@/modules/identity/infrastructure/crypto";
 import {
   drizzleRateLimiter,
@@ -39,4 +41,11 @@ let ledger: LedgerDeps | undefined;
 export function ledgerDeps(): LedgerDeps {
   ledger ??= { ledger: drizzleLedgerRepository(db()), clock: systemClock, newId };
   return ledger;
+}
+
+let planning: PlanningDeps | undefined;
+
+export function planningDeps(): PlanningDeps {
+  planning ??= { planning: drizzlePlanningRepository(db()), ledger: ledgerDeps() };
+  return planning;
 }

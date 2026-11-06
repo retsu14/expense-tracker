@@ -485,6 +485,25 @@ export function drizzleLedgerRepository(db: Db): LedgerRepository {
       return rows;
     },
 
+    async expenseByCategory(userId, from, to) {
+      return db
+        .select({
+          categoryId: transactions.categoryId,
+          total: sql<number>`sum(${transactions.amount})`.mapWith(Number),
+        })
+        .from(transactions)
+        .where(
+          and(
+            eq(transactions.userId, userId),
+            isNull(transactions.deletedAt),
+            eq(transactions.kind, "expense"),
+            gte(transactions.occurredAt, from),
+            lt(transactions.occurredAt, to),
+          ),
+        )
+        .groupBy(transactions.categoryId);
+    },
+
     async lastUsedAccountId(userId) {
       const [row] = await db
         .select({ id: transactions.accountId })

@@ -11,7 +11,7 @@ type ResponsiveModalProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   title: string;
-  description?: string;
+  description?: string | undefined;
   children: ReactNode;
 };
 

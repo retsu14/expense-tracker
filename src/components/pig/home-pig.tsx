@@ -15,21 +15,39 @@ function greeting(hour: number, name: string) {
   return `Good evening, ${name}!`;
 }
 
-export function HomePig({ name, pigName }: { name: string; pigName: string }) {
+export function HomePig({
+  name,
+  pigName,
+  budgetUsedPct,
+  alertPct,
+}: {
+  name: string;
+  pigName: string;
+  budgetUsedPct: number | null;
+  alertPct: number;
+}) {
   const mounted = useMounted();
   const setMood = useMascotStore((s) => s.setMood);
   const say = useMascotStore((s) => s.say);
 
   useEffect(() => {
     const hour = new Date().getHours();
-    setMood(deriveMood({ hour, budgetUsedPct: null }));
+    const mood = deriveMood({ hour, budgetUsedPct, alertPct });
+    setMood(mood);
     const t = setTimeout(() => {
-      say(greeting(hour, name.split(" ")[0] ?? name));
+      const first = name.split(" ")[0] ?? name;
+      say(
+        mood === "sad"
+          ? `${first}, we went over budget. Let's slow down a bit?`
+          : mood === "worried"
+            ? `Heads up ${first}, budget is getting tight!`
+            : greeting(hour, first),
+      );
     }, 600);
     return () => {
       clearTimeout(t);
     };
-  }, [setMood, say, name]);
+  }, [setMood, say, name, budgetUsedPct, alertPct]);
 
   return (
     <div className="flex justify-center pt-12 md:pt-14">

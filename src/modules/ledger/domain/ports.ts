@@ -70,6 +70,11 @@ export type LedgerRepository = {
   listDeleted(userId: string, limit: number): Promise<TransactionView[]>;
   summary(userId: string, filter: ResolvedFilter): Promise<Summary>;
   dayTotals(userId: string, filter: ResolvedFilter, days: Ymd[], tz: string): Promise<DayTotal[]>;
+  expenseByCategory(
+    userId: string,
+    from: Date,
+    to: Date,
+  ): Promise<{ categoryId: string | null; total: number }[]>;
   lastUsedAccountId(userId: string): Promise<string | null>;
   suggestCategoryId(
     userId: string,

@@ -1,18 +1,28 @@
 import type { Metadata } from "next";
 
-import { PageHeader } from "@/components/layout/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
+import { BudgetsView } from "@/components/plan/budgets-view";
+import { requireUser } from "@/modules/identity/presentation/dal";
+import { getSettings } from "@/modules/ledger/application/ledger.use-cases";
+import { budgetOverview } from "@/modules/planning/application/planning.use-cases";
+import { ledgerDeps, planningDeps } from "@/shared/container";
 
-export const metadata: Metadata = { title: "Plan" };
+export const metadata: Metadata = { title: "Budgets" };
 
-export default function PlanPage() {
+export default async function BudgetsPage() {
+  const user = await requireUser();
+  const [overview, categories, settings] = await Promise.all([
+    budgetOverview(planningDeps(), user.id),
+    ledgerDeps().ledger.listCategories(user.id),
+    getSettings(ledgerDeps(), user.id),
+  ]);
+
   return (
-    <>
-      <PageHeader title="Plan" description="Budgets, bills, goals and debts." />
-      <EmptyState
-        title="No budgets yet"
-        description="Set a monthly or per-payday budget and Oink will keep an eye on it."
-      />
-    </>
+    <BudgetsView
+      overview={overview}
+      categories={categories
+        .filter((c) => c.kind === "expense" && !c.system)
+        .map((c) => ({ id: c.id, name: c.name, icon: c.icon, color: c.color }))}
+      hasPayday={settings.payday.type !== "none"}
+    />
   );
 }

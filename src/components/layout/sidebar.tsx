@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
 import type { ShellUser } from "./app-shell";
+import { NotificationBell } from "./notification-bell";
 import { isActive, type NavItem, primaryNav, secondaryNav } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
@@ -31,13 +32,16 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar({ user }: { user: ShellUser }) {
+export function Sidebar({ user, unread }: { user: ShellUser; unread: number }) {
   const pathname = usePathname();
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
 
   return (
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:flex">
-      <Wordmark className="px-2" />
+      <div className="flex items-center justify-between">
+        <Wordmark className="px-2" />
+        <NotificationBell unread={unread} />
+      </div>
       <Button
         className="mt-6 w-full"
         onClick={() => {

@@ -9,7 +9,15 @@ import { Sidebar } from "./sidebar";
 
 export type ShellUser = { displayName: string; username: string; avatarUrl: string | null };
 
-export function AppShell({ children, user }: { children: ReactNode; user: ShellUser }) {
+export function AppShell({
+  children,
+  user,
+  unread,
+}: {
+  children: ReactNode;
+  user: ShellUser;
+  unread: number;
+}) {
   return (
     <div className="flex min-h-dvh">
       <a
@@ -18,10 +26,10 @@ export function AppShell({ children, user }: { children: ReactNode; user: ShellU
       >
         Skip to content
       </a>
-      <Sidebar user={user} />
-      <NavRail />
+      <Sidebar user={user} unread={unread} />
+      <NavRail unread={unread} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileTopBar user={user} />
+        <MobileTopBar user={user} unread={unread} />
         <main
           id="main"
           className="mx-auto w-full max-w-[1200px] flex-1 px-4 pt-6 pb-28 md:px-6 md:pt-8 md:pb-10 lg:px-8"

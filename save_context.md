@@ -91,6 +91,15 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Activity: search (`/` focuses), filter sheet, chips, day groups + totals, swipe-left/hover delete with undo, Trash page (`/trash`, 30-day auto purge on visit, restore, empty). Accounts page CRUD + archive. `/settings/categories` categories CRUD/archive + favorites removal.
 - Gotchas fixed: in raw `sql` inside a single-table select Drizzle renders outer columns unqualified → use `sql.raw('"accounts"."id"')`. Proxy refreshes the cookie on GET only (setting it on action POSTs made Next refresh the page). Page-level grids need `grid-cols-1` or wide content overflows on mobile. Lists reset from server props by JSON signature, not identity.
 
+## Planning notes (Phase 4)
+
+- Module `src/modules/planning` (budgets + bills/recurring + goals + notifications in one module; debts deferred to P1 pack). Domain: `period.ts` (month / pay-cycle ranges from payday schedule, clamps short months, `nextPayday`), `budget.ts` (progress, rollover carry one period back, alert level, suggestion rounding to ₱100, safe-to-spend/day), `recurring.ts` (schedules monthly/semi-monthly/weekly/yearly, occurrences, status, `postKey` = idempotency key), `goal.ts` (progress, calendar-month `monthlyNeeded`).
+- Tables (migration 0002): budgets (UNIQUE NULLS NOT DISTINCT user+category; null category = overall), recurring, recurring_posts (pk recurring+due), goals, goal_contributions (signed amounts; goals are set-aside tracking, wallets unchanged), notifications (unique user+dedupe_key).
+- Use cases `planning.use-cases.ts`: `budgetOverview` (items, overall, safe-to-spend minus unpaid bills in period, usedPct for pig), budget CRUD + `budgetSuggestions` (3-month avg), `billOccurrences`, recurring CRUD, `markOccurrence` (paid → ledger `createTransaction` with postKey idempotency), `autoPostDue`, `checkBills`, `checkBudgetAlerts` (returns newly created alerts), `syncPlanning`, goals CRUD + `contributeToGoal` (auto-complete + notification).
+- `maybeSyncPlanning` runs in (app) layout, throttled 2 min per user in memory. `createTransactionAction` returns `alerts`; quick-add shows warning toasts + pig worried/sad.
+- UI: `/plan` (budgets + safe-to-spend + suggestions), `/plan/bills`, `/plan/goals` (GoalPig fills up), `/notifications` (auto mark read + button), bell in sidebar/rail/top bar. Home: safe-to-spend, upcoming bills, top budgets, goals, pig mood from budgets (any category over → at least worried).
+- Testing quirk: when the browser pane is hidden, `window.$RV(window.$RB)` flushes React streaming reveals.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -98,7 +107,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 1 Pig v1
 - [x] 2 Identity
 - [x] 3 Onboarding + Ledger
-- [ ] 4 Plan (budgets, bills, recurring, goals, notifications)
+- [x] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [ ] 5 Insights
 - [ ] 6 PWA
 - [ ] 7 P1 pack
@@ -114,3 +123,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 1 done: interactive SVG pig (6 moods + cover eyes), eye-follow, blink, tap/pet/drag, speech bubble, oink sound + haptics toggles, mood domain rules + tests, Home pig, /dev/pig playground. Vitest uses native tsconfigPaths. Committed 32a79e6.
 - 2026-11-06 — Phase 2 done: username/password auth (argon2id, DB sessions, proxy guard), 8 recovery codes + forgot password, rate limits, settings (profile, pig name, change password, regenerate codes, devices, sign out), avatar upload to R2, user in sidebar/top bar, Home greets by name. 26 tests total. E2E verified on Neon: register, login (wrong + right), sign out, reset with code (reuse rejected), profile save. Avatar browser upload blocked by missing R2 CORS (server-side presigned PUT verified OK); R2_PUBLIC_URL (r2.dev) times out from this network — leave it empty to fall back to signed GET URLs, or attach a custom domain. Test account `piggy_tester` exists in the DB.
 - 2026-11-06 — Phase 3 done: onboarding, wallets, PH categories, transactions (expense/income/transfer + fee), amount math, favorites, quick-add create/edit, Activity with server search/filters/keyset paging/undo, Trash, Accounts, Categories pages, Home totals + recent, N shortcut. 43 tests. E2E verified on Neon (balances, search, filters, paging, undo/trash, transfer fee edit, mobile layout). Test login in git-ignored `test-account.local.md`.
+- 2026-11-06 — Phase 3 committed c030bb7. Phase 4 done: budgets (monthly/pay cycle, rollover, alerts, suggestions, safe-to-spend), bills & recurring (mark paid/skip, auto-post, reminders), goals (contributions, auto-complete), notification center + bell, budget alert toasts, Home planning widgets, pig mood from budgets. 51 tests. E2E verified on Neon.
