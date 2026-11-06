@@ -16,7 +16,12 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <AppShell
-      user={{ displayName: user.displayName, username: user.username, avatarUrl: user.avatarUrl }}
+      user={{
+        id: user.id,
+        displayName: user.displayName,
+        username: user.username,
+        avatarUrl: user.avatarUrl,
+      }}
       unread={unread}
     >
       {children}

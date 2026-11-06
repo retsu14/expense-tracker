@@ -16,6 +16,14 @@ export function KeyboardShortcuts() {
   }, [setCommandOpen]);
 
   useSyncHiddenAmounts();
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("add") !== "1") return;
+    url.searchParams.delete("add");
+    window.history.replaceState(null, "", url.pathname + url.search);
+    setQuickAddOpen(true);
+  }, [setQuickAddOpen]);
   useCommandPaletteShortcut(openPalette);
 
   useEffect(() => {

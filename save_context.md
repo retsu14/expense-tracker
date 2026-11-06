@@ -108,6 +108,15 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Exports: `/api/export/transactions?from&to` (CSV, BOM, formula-injection safe, amounts numeric), `/api/export/backup` (JSON, centavos, no ids/hashes). Settings → Your data: exports + delete account (password + type username; cascades; R2 avatar removed) → `/register?deleted=1`.
 - Hide amounts: eye toggle (sidebar/top bar), `html.amounts-hidden` blurs `.tabular` (opt out with `.no-blur`) and `<Amount>` shows ₱•••. Command palette Ctrl/⌘K (`command-palette.tsx`): actions, pages, live transaction search; search button in sidebar/top bar.
 
+## PWA notes (Phase 6)
+
+- Icons generated from the pig SVG by `npm run icons` (`scripts/generate-icons.mjs`, sharp): `public/icons/icon-192|512.png`, `maskable-512.png`, `badge-96.png`, `src/app/apple-icon.png`, `src/app/icon.svg`.
+- `src/app/manifest.ts` (standalone, #141414, shortcuts: `/?add=1` opens quick-add, Activity, Budgets).
+- `public/sw.js`: precaches `/offline` + icons; cache-first for `/_next/static` + `/icons`; navigations network-first → `/offline` fallback; never caches HTML/data. Registered only in production (`ServiceWorkerRegister` in Providers). Bump `VERSION` to invalidate caches. `next.config.ts` sends sw.js no-cache + CSP headers and global security headers.
+- Offline queue: `src/lib/offline-queue.ts` (IndexedDB `oink-offline`, items keyed by idempotencyKey, scoped by userId; `processQueue` tested). Quick-add caches its context in localStorage `oink-qa-ctx:<userId>` (cleared on auth pages); when a save fails offline it enqueues and toasts. `OfflineSync` (in AppShell) syncs on load, on `online`, every 30s; banner shows offline/pending; `PendingEntries` on Activity lists items, errors, discard.
+- Install: `usePwaStore` captures `beforeinstallprompt`; `InstallPrompt` banner after 2nd visit (14-day snooze), iOS shows Share → Add to Home Screen sheet; Settings → Appearance has `InstallAppRow`.
+- Testing: SW registration can't run in the embedded Claude browser ("unknown error"); verify SW in real Chrome/Safari. Offline queue verified by stopping a local `next start -p 3100` server.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -117,7 +126,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 3 Onboarding + Ledger
 - [x] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [x] 5 Insights
-- [ ] 6 PWA
+- [x] 6 PWA
 - [ ] 7 P1 pack
 - [ ] 8 Local AI
 - [ ] 9 Hardening
@@ -133,3 +142,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 3 done: onboarding, wallets, PH categories, transactions (expense/income/transfer + fee), amount math, favorites, quick-add create/edit, Activity with server search/filters/keyset paging/undo, Trash, Accounts, Categories pages, Home totals + recent, N shortcut. 43 tests. E2E verified on Neon (balances, search, filters, paging, undo/trash, transfer fee edit, mobile layout). Test login in git-ignored `test-account.local.md`.
 - 2026-11-06 — Phase 3 committed c030bb7. Phase 4 done: budgets (monthly/pay cycle, rollover, alerts, suggestions, safe-to-spend), bills & recurring (mark paid/skip, auto-post, reminders), goals (contributions, auto-complete), notification center + bell, budget alert toasts, Home planning widgets, pig mood from budgets. 51 tests. E2E verified on Neon.
 - 2026-11-06 — Phase 4 committed 84ef6ff. Phase 5 done: Insights page with validated charts + table views, cash-flow forecast, CSV/JSON export, delete account, hide amounts, Ctrl/⌘K command palette. 59 tests. E2E verified on Neon (numbers, exports, palette, hide, delete cascade).
+- 2026-11-06 — Phase 5 committed 24302b9. Phase 6 done: manifest + pig icons + shortcuts, service worker + offline page, offline quick-add queue with auto-sync, install prompt (Android/desktop + iOS help), security headers. 61 tests. Offline queue verified end-to-end (saved offline, synced once on reconnect).

@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Segmented } from "@/components/ui/segmented";
 import { centavosToInput, formatPeso } from "@/lib/money";
+import { isNetworkError, offlineQueue } from "@/lib/offline-queue";
 import { cn } from "@/lib/utils";
 import { evaluateAmount, isExpression } from "@/modules/ledger/domain/amount-expression";
 import type { TransactionKind } from "@/modules/ledger/domain/transaction";
@@ -33,7 +34,15 @@ const VISIBLE_CATEGORIES = 8;
 
 const newKey = () => crypto.randomUUID();
 
-export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: () => void }) {
+export function QuickAddForm({
+  ctx,
+  userId,
+  onDone,
+}: {
+  ctx: QuickAddContext;
+  userId: string;
+  onDone: () => void;
+}) {
   const editing = ctx.transaction;
   const [kind, setKind] = useState<TransactionKind>(editing?.kind ?? "expense");
   const [amount, setAmount] = useState(editing ? centavosToInput(editing.amount) : "");
@@ -98,12 +107,53 @@ export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: ()
     ...(editing ? {} : { idempotencyKey: idempotencyKey.current }),
   });
 
+  const queueOffline = async (
+    input: Record<string, unknown>,
+    label: string,
+    cents: number,
+    k: TransactionKind,
+  ) => {
+    await offlineQueue.enqueue({
+      key: String(input.idempotencyKey),
+      userId,
+      input,
+      label,
+      amount: cents,
+      kind: k,
+    });
+    window.dispatchEvent(new Event("oink:queued"));
+    onDone();
+    toast("Saved offline 🐷", { description: "It will sync when you're back online." });
+  };
+
+  const offlineLabel = () => {
+    if (note.trim()) return note.trim();
+    if (kind === "transfer") return "Transfer";
+    return ctx.categories.find((c) => c.id === categoryId)?.name ?? "Transaction";
+  };
+
   const submit = () => {
     setFormError(null);
     startTransition(async () => {
-      const res = editing
-        ? await updateTransactionAction(editing.id, payload())
-        : await createTransactionAction(payload());
+      if (!editing && !navigator.onLine) {
+        if (evaluated === null) {
+          setErrors({ amount: ["Enter a valid amount, like 150 or 120+30."] });
+          return;
+        }
+        await queueOffline(payload(), offlineLabel(), evaluated, kind);
+        return;
+      }
+      let res;
+      try {
+        res = editing
+          ? await updateTransactionAction(editing.id, payload())
+          : await createTransactionAction(payload());
+      } catch (e) {
+        if (!editing && isNetworkError(e) && evaluated !== null) {
+          await queueOffline(payload(), offlineLabel(), evaluated, kind);
+        } else setFormError("Couldn't save. Check your connection and try again.");
+        return;
+      }
       if (!res.ok) {
         setErrors(res.error.fieldErrors ?? {});
         if (!res.error.fieldErrors) setFormError(res.error.message);
@@ -153,7 +203,7 @@ export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: ()
 
   const logTemplate = (t: QuickAddContext["templates"][number]) => {
     startTransition(async () => {
-      const res = await createTransactionAction({
+      const input = {
         kind: t.kind,
         amount: centavosToInput(t.amount),
         accountId: t.accountId ?? accountId,
@@ -161,7 +211,16 @@ export function QuickAddForm({ ctx, onDone }: { ctx: QuickAddContext; onDone: ()
         date: ctx.today,
         note: t.note,
         idempotencyKey: newKey(),
-      });
+      };
+      let res;
+      try {
+        if (!navigator.onLine) throw new TypeError("Failed to fetch");
+        res = await createTransactionAction(input);
+      } catch (e) {
+        if (isNetworkError(e)) await queueOffline(input, t.name, t.amount, t.kind);
+        else toast.error("Couldn't save. Try again.");
+        return;
+      }
       if (!res.ok) {
         toast.error(res.error.message);
         return;

@@ -5,7 +5,7 @@ import {
   sessionCookieOptions,
 } from "@/modules/identity/presentation/session-cookie";
 
-const AUTH_PAGES = ["/login", "/register", "/forgot-password"];
+const AUTH_PAGES = ["/login", "/register", "/forgot-password", "/offline"];
 
 export function proxy(request: NextRequest) {
   const { pathname, search } = request.nextUrl;

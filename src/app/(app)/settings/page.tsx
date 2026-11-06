@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
+import { InstallAppRow } from "@/components/pwa/install-prompt";
 import { DataSettings } from "@/components/settings/data-settings";
 import { MascotSettings } from "@/components/settings/mascot-settings";
 import { ProfileForm } from "@/components/settings/profile-form";
@@ -66,6 +67,9 @@ export default async function SettingsPage() {
             <CardTitle>Appearance</CardTitle>
           </CardHeader>
           <ThemeSwitcher />
+          <div className="mt-5 border-t border-border pt-5">
+            <InstallAppRow />
+          </div>
         </Card>
 
         <Card>

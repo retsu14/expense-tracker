@@ -7,6 +7,7 @@ import { ActivityToolbar } from "@/components/activity/activity-toolbar";
 import { Amount } from "@/components/ledger/amount";
 import { AddTransactionButton } from "@/components/layout/add-transaction-button";
 import { PageHeader } from "@/components/layout/page-header";
+import { PendingEntries } from "@/components/pwa/pending-entries";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/modules/identity/presentation/dal";
 import {
@@ -63,6 +64,7 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
             color: c.color,
           }))}
         />
+        <PendingEntries />
         <p className="text-body-sm text-fg-muted" aria-live="polite">
           {summary.count} {summary.count === 1 ? "transaction" : "transactions"}
           {summary.expense > 0 && (
