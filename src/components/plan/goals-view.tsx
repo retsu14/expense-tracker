@@ -190,11 +190,13 @@ export function GoalsView({ goals }: { goals: GoalWithProgress[] }) {
             {done.map((g) => (
               <li
                 key={g.id}
-                className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3"
+                className="flex items-center gap-3 rounded-lg border border-border bg-surface px-4 py-3 max-xs:gap-2 max-xs:px-3"
               >
                 <GoalPig pct={100} size={40} />
-                <span className="min-w-0 flex-1 truncate font-medium">{g.name}</span>
-                <Amount value={g.saved} className="font-semibold" />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate font-medium">{g.name}</span>
+                  <Amount value={g.saved} className="text-body-sm font-semibold text-fg-muted" />
+                </span>
                 <Button
                   variant="ghost"
                   size="icon"

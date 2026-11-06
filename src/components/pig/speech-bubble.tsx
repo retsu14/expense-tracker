@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 
 type SpeechBubbleProps = {
   text: string | null;
@@ -16,7 +16,7 @@ export function SpeechBubble({ text, bubbleKey, onDismiss }: SpeechBubbleProps) 
     >
       <AnimatePresence mode="wait">
         {text && (
-          <motion.button
+          <m.button
             key={bubbleKey}
             type="button"
             onClick={onDismiss}
@@ -24,14 +24,14 @@ export function SpeechBubble({ text, bubbleKey, onDismiss }: SpeechBubbleProps) 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 4, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 420, damping: 26 }}
-            className="pointer-events-auto relative max-w-56 cursor-pointer rounded-lg border border-border bg-surface-2 px-3 py-2 text-center font-brand text-body-sm font-medium whitespace-nowrap text-fg shadow-lg"
+            className="pointer-events-auto relative w-max max-w-[min(15rem,75vw)] cursor-pointer rounded-lg border border-border bg-surface-2 px-3 py-2 text-center font-brand text-body-sm font-medium text-balance text-fg shadow-lg"
           >
             {text}
             <span
               aria-hidden
               className="absolute top-full left-1/2 -mt-1.5 size-3 -translate-x-1/2 rotate-45 border-r border-b border-border bg-surface-2"
             />
-          </motion.button>
+          </m.button>
         )}
       </AnimatePresence>
     </div>

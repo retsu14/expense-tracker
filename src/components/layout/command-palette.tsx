@@ -41,21 +41,6 @@ type Command = {
   run: () => void;
 };
 
-export function useCommandPaletteShortcut(open: () => void) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
-        e.preventDefault();
-        open();
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => {
-      window.removeEventListener("keydown", onKey);
-    };
-  }, [open]);
-}
-
 export function CommandPalette({
   open,
   onOpenChange,

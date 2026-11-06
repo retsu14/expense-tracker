@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 
-import { InstallPrompt } from "@/components/pwa/install-prompt";
 import { OfflineSync } from "@/components/pwa/offline-sync";
 
 import { BottomNav } from "./bottom-nav";
@@ -8,6 +7,7 @@ import { KeyboardShortcuts } from "./keyboard-shortcuts";
 import { MobileTopBar } from "./mobile-top-bar";
 import { NavRail } from "./nav-rail";
 import { QuickAddModal } from "./quick-add-modal";
+import { LazyAppLock, LazyInstallPrompt } from "./shell-extras";
 import { Sidebar } from "./sidebar";
 
 export type ShellUser = {
@@ -48,7 +48,8 @@ export function AppShell({
       </div>
       <BottomNav />
       <QuickAddModal userId={user.id} />
-      <InstallPrompt />
+      <LazyInstallPrompt />
+      <LazyAppLock userId={user.id} />
       <KeyboardShortcuts />
     </div>
   );

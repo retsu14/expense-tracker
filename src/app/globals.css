@@ -80,20 +80,21 @@
 }
 
 @theme {
-  --text-display: 2.5rem;
-  --text-display--line-height: 2.75rem;
+  --breakpoint-xs: 22.5rem;
+  --text-display: clamp(1.75rem, 1.2rem + 2.6vw, 2.5rem);
+  --text-display--line-height: 1.12;
   --text-display--letter-spacing: -0.01em;
   --text-display--font-weight: 700;
-  --text-display-sm: 2rem;
-  --text-display-sm--line-height: 2.25rem;
+  --text-display-sm: clamp(1.625rem, 1.2rem + 2vw, 2rem);
+  --text-display-sm--line-height: 1.12;
   --text-display-sm--letter-spacing: -0.01em;
   --text-display-sm--font-weight: 700;
-  --text-h1: 1.75rem;
-  --text-h1--line-height: 2.125rem;
+  --text-h1: clamp(1.375rem, 1.1rem + 1.3vw, 1.75rem);
+  --text-h1--line-height: 1.22;
   --text-h1--letter-spacing: -0.01em;
   --text-h1--font-weight: 700;
-  --text-h1-sm: 1.5rem;
-  --text-h1-sm--line-height: 1.875rem;
+  --text-h1-sm: clamp(1.3125rem, 1.1rem + 1vw, 1.5rem);
+  --text-h1-sm--line-height: 1.25;
   --text-h1-sm--letter-spacing: -0.01em;
   --text-h1-sm--font-weight: 700;
   --text-h2: 1.25rem;
@@ -128,6 +129,11 @@
 
   body {
     @apply bg-bg font-sans text-body text-fg antialiased;
+    overflow-wrap: break-word;
+  }
+
+  :where(.grid) > :where(*) {
+    min-width: 0;
   }
 
   :focus-visible {

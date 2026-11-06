@@ -201,42 +201,51 @@ export function BillsView({
               <li
                 key={r.id}
                 className={cn(
-                  "flex items-center gap-3 px-4 py-3 md:px-5",
+                  "flex items-center gap-2 px-4 py-3 md:gap-3 md:px-5",
                   !r.active && "opacity-55",
                 )}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">
-                    {r.name}
-                    {!r.active && <span className="ml-2 text-caption text-fg-muted">Paused</span>}
-                  </p>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="min-w-0 truncate font-medium">
+                      {r.name}
+                      {!r.active && <span className="ml-2 text-caption text-fg-muted">Paused</span>}
+                    </p>
+                    <Amount
+                      value={r.amount}
+                      kind={r.kind}
+                      sign
+                      className="shrink-0 font-semibold max-xs:text-body-sm"
+                    />
+                  </div>
                   <p className="text-caption font-normal text-fg-muted">
                     {r.scheduleLabel}
                     {r.autoPost ? " · records automatically" : ` · remind ${r.remindDays}d before`}
                   </p>
                 </div>
-                <Amount value={r.amount} kind={r.kind} sign className="font-semibold" />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label={`Edit ${r.name}`}
-                  onClick={() => {
-                    setEditing(r);
-                  }}
-                >
-                  <Pencil aria-hidden />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  disabled={pending}
-                  aria-label={r.active ? `Pause ${r.name}` : `Resume ${r.name}`}
-                  onClick={() => {
-                    toggle(r);
-                  }}
-                >
-                  {r.active ? <Pause aria-hidden /> : <Play aria-hidden />}
-                </Button>
+                <div className="-mr-2 flex shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    aria-label={`Edit ${r.name}`}
+                    onClick={() => {
+                      setEditing(r);
+                    }}
+                  >
+                    <Pencil aria-hidden />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    disabled={pending}
+                    aria-label={r.active ? `Pause ${r.name}` : `Resume ${r.name}`}
+                    onClick={() => {
+                      toggle(r);
+                    }}
+                  >
+                    {r.active ? <Pause aria-hidden /> : <Play aria-hidden />}
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

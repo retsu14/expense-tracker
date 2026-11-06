@@ -117,6 +117,36 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Install: `usePwaStore` captures `beforeinstallprompt`; `InstallPrompt` banner after 2nd visit (14-day snooze), iOS shows Share → Add to Home Screen sheet; Settings → Appearance has `InstallAppRow`.
 - Testing: SW registration can't run in the embedded Claude browser ("unknown error"); verify SW in real Chrome/Safari. Offline queue verified by stopping a local `next start -p 3100` server.
 
+## P1 pack notes (Phase 7)
+
+- Migration 0003: debts, debt_payments (planning), saved_filters + transactions.split_group (ledger), category `system` now `fees | debt_out | debt_in` ("Utang payments"/"Utang collected", created lazily via `ensureSystemCategory`).
+- Debts (`planning/domain/debt.ts`, `debts.use-cases.ts`, `/plan/debts`): I lent / I borrowed, due date, payments (optionally recorded to a wallet as income/expense in the utang system categories), auto-settle at 0, manual settle, delete settled.
+- Split: `createSplitTransaction` writes N independent expense rows sharing `splitGroup` (idempotency `<key>:<i>`), so every aggregate stays correct; rows show "Split" and edit individually. Quick-add "Split" chip → SplitEditor (category + amount math per part).
+- Activity: Select mode + `BulkBar` (recategorize only when all selected share a kind, move wallet, delete with undo; transfers/fee rows not selectable). Saved views (`saved-views.tsx`, max 12, stored as canonical URL params).
+- `/activity/calendar?m=YYYY-MM` month grid (daily spent/earned, tap → that day). `/import` CSV wizard: pure `domain/csv-import.ts` (quotes, ; or , delimiter, BOM, ymd/dmy/mdy, (neg) amounts, column guessing), batches of 100, deterministic `imp:<hash>` idempotency so re-imports skip.
+- `/insights/recap?m=YYYY-MM` "Oink recap": totals, saved %, top category, biggest day/buy, no-spend days, tags, pig verdict, Web Share/clipboard.
+- App lock: `src/lib/app-lock.ts` (PBKDF2-SHA256 150k, per-user key in localStorage, device-only), `AppLock` overlay (keypad, 5 tries → 30s cooldown, "Forgot PIN? Sign out"), relocks on fresh session or after 5 min hidden; toggle in Settings → Security.
+- Deferred: receipt photos (needs R2 CORS), web push + daily reminder (needs VAPID keys + a scheduler), WebAuthn biometrics.
+
+## Local AI notes (Phase 8)
+
+- Module `src/modules/assistant`: pure domain (`models.ts` catalog, `entry-parser.ts` rule NL parser with PH keyword map, `snapshot.ts` stats snapshot → prompt text + `ruleTips`, `prompts.ts` port/prompts/AI-output parsing). Client adapters in `infrastructure/`: `webllm.ts` (+ `webllm.worker.ts`, lazy import, singleton engine, load/cancel/remove, generate queue) and `ollama.ts` (status, pull NDJSON progress, delete, chat stream; auto CPU fallback `num_gpu:0` when the GPU runner crashes).
+- Server: `assistantSnapshot` (application, server-only) built from `insights("month")` + goals/debts/accounts/bills; `assistantSnapshotAction`. AI never sees raw rows, only computed totals.
+- WebLLM picks q4f16 builds when the GPU has `shader-f16`, else q4f32 (`webllmId`). Dev GPU (GTX 1050 Ti) needs f32.
+- Store `useAssistantStore` (persisted `oink-assistant`: enabled, provider, models, Ollama URL, last 40 chat msgs per owner). Hook `useAssistant` gives provider + loading progress.
+- UI: Settings → AI card (`ai-settings.tsx`, model picker/download/cancel/remove, Ollama connect + pull + custom name + OLLAMA_ORIGINS help, cloud models flagged), `/assistant` chat (suggestions, streaming, stop, clear, AI-off = CTA + rule tips), Insights "<pig>'s take" card (rule tips + cached AI monthly check-in), quick-add "Type it" (rule parse, AI JSON fills gaps; rule values win for amount/date/wallet/note), Home "Ask <pig>" chip, sidebar "Ask Oink".
+- Fixed: Devices "N minutes ago" hydration mismatch (suppressHydrationWarning).
+
+## Hardening notes (Phase 9)
+
+- Pig v2: chibi redesign (`pig-parts.tsx`: Backdrop/Head/Snout/Eyes…), `health` prop morphs body via springs: thriving (chubby, belly heart, floating hearts) → healthy → thin (ribs, droopy ears, paler) → famished (very thin, empty bowl, "grr…", sweat). Domain `mascot/domain/health.ts` `assessHealth` scores 0–100 from budget %, over-budget categories, spent>earned, negative balance, forecast dip, overdue bills/utang, owed; `deriveMood` takes health. Playground `/dev/pig` has health buttons.
+- Home: `PigHero` (container-query layout, health meter, up to 4 reasons, Ask button, health-aware greeting) replaces HomePig; grid hero 5 cols + safe-to-spend 7. Recap pig uses health too.
+- 320px pass: fluid type (`clamp`) for display/h1, `--breakpoint-xs` 360px, global `:where(.grid)>:where(*){min-width:0}`, body `overflow-wrap`, page-header actions wrap (Activity icons-only <360), calendar cells shrink, bill/goal/category rows restacked, KPI/debt tiles `text-h3 md:text-h2`, Home stats row flex-wrap, speech bubble wraps, desktop modal scrolls (`max-h` + overflow).
+- Security: nonce CSP in `proxy.ts` via `src/lib/csp.ts` (strict-dynamic, wasm-unsafe-eval for WebLLM, connect https: + localhost for Ollama/R2/HF, frame-ancestors none), nonce passed to next-themes; HSTS (prod) + COOP in next.config. Neon pool `error` listener (idle socket drop used to crash dev server).
+- Perf: lazy QuickAddForm, CommandPalette (shortcut hook moved to keyboard-shortcuts), AppLock, InstallPrompt (`shell-extras.tsx`); LazyMotion + `m` with async `domMax`. Home ≈ 280 KB gz JS total (≈106 KB is React DOM + Next runtime).
+- E2E: Playwright 1.64.1 + axe 4.14.0 (system Chrome via `channel`), `e2e/core.spec.ts`: register→onboard→type-it entry→budget→pig health→search→CSV export, axe (wcag2/21 A+AA serious/critical) + no-sideways-scroll on 7 signed-in + 3 signed-out pages, desktop + 320px. Session saved to `e2e/.auth` (git-ignored), global teardown deletes the e2e users. Run: `npx next build && npx next start -p 3100` then `E2E_BASE_URL=http://localhost:3100 npm run e2e`.
+- Vercel: build failed with ENOENT `.next/next-server.js.nft.json` in the standalone copy step. `output: "standalone"` now only when `VERCEL` is unset (Docker prod still standalone). Not reproducible locally; confirm on next Vercel deploy.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -127,9 +157,9 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [x] 5 Insights
 - [x] 6 PWA
-- [ ] 7 P1 pack
-- [ ] 8 Local AI
-- [ ] 9 Hardening
+- [x] 7 P1 pack (receipts + push deferred)
+- [x] 8 Local AI
+- [x] 9 Hardening
 
 ## Log
 
@@ -143,3 +173,6 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 3 committed c030bb7. Phase 4 done: budgets (monthly/pay cycle, rollover, alerts, suggestions, safe-to-spend), bills & recurring (mark paid/skip, auto-post, reminders), goals (contributions, auto-complete), notification center + bell, budget alert toasts, Home planning widgets, pig mood from budgets. 51 tests. E2E verified on Neon.
 - 2026-11-06 — Phase 4 committed 84ef6ff. Phase 5 done: Insights page with validated charts + table views, cash-flow forecast, CSV/JSON export, delete account, hide amounts, Ctrl/⌘K command palette. 59 tests. E2E verified on Neon (numbers, exports, palette, hide, delete cascade).
 - 2026-11-06 — Phase 5 committed 24302b9. Phase 6 done: manifest + pig icons + shortcuts, service worker + offline page, offline quick-add queue with auto-sync, install prompt (Android/desktop + iOS help), security headers. 61 tests. Offline queue verified end-to-end (saved offline, synced once on reconnect).
+- 2026-11-06 — Phase 6 committed 482172a. Phase 7 done: debts/utang, split transactions, bulk actions, saved views, calendar, CSV import, monthly recap, PIN app lock. 67 tests. E2E verified on Neon. Receipts + push deferred. Not committed yet.
+- 2026-11-06 — Phase 7 committed 7ab5fec. Phase 8 done: optional local AI (WebLLM + Ollama), chat, insights check-in, natural-language quick entry, rule tips. 80 tests. Verified WebLLM (SmolLM2 f32) + Ollama (qwen2.5:0.5b, CPU fallback) end to end; test models removed. Not committed yet.
+- 2026-11-06 — Phase 8 committed f9de380. Phase 9 done: pig v2 with financial health states + Home hero, 320px fixes, CSP/HSTS/COOP, lazy loading, Playwright+axe e2e (28 pass on prod build, desktop + 320px), Neon pool crash fix, Vercel standalone fix. 88 unit tests. Committed.

@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 
+import { buildCsp, createNonce } from "@/lib/csp";
 import {
   SESSION_COOKIE,
   sessionCookieOptions,
@@ -22,7 +23,13 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const response = NextResponse.next();
+  const nonce = createNonce();
+  const csp = buildCsp(nonce, process.env.NODE_ENV === "development");
+  const headers = new Headers(request.headers);
+  headers.set("x-nonce", nonce);
+  headers.set("Content-Security-Policy", csp);
+  const response = NextResponse.next({ request: { headers } });
+  response.headers.set("Content-Security-Policy", csp);
   if (token && request.method === "GET") {
     response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
   }

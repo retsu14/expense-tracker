@@ -1,4 +1,4 @@
-import { Download, TrendingDown, TrendingUp } from "lucide-react";
+import { Download, Sparkles, TrendingDown, TrendingUp } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 
@@ -9,6 +9,7 @@ import {
   SpendingCalendar,
   WeekdayChart,
 } from "@/components/insights/charts";
+import { OinkTakeCard } from "@/components/assistant/oink-take-card";
 import { PageHeader } from "@/components/layout/page-header";
 import { Amount } from "@/components/ledger/amount";
 import { CategoryIcon } from "@/components/ledger/category-icon";
@@ -57,9 +58,9 @@ function Kpi({
   delta?: React.ReactNode;
 }) {
   return (
-    <Card className="grid gap-1 p-4">
+    <Card className="grid gap-1 p-4 max-xs:p-3">
       <p className="text-caption text-fg-muted">{label}</p>
-      <div className="text-h2 tabular">{children}</div>
+      <div className="text-h3 tabular md:text-h2">{children}</div>
       {delta}
     </Card>
   );
@@ -81,12 +82,20 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
         title="Insights"
         description="Where your money goes."
         actions={
-          <Button asChild variant="secondary" size="sm">
-            <a href={`/api/export/transactions?from=${range.start}&to=${range.end}`} download>
-              <Download aria-hidden />
-              Export CSV
-            </a>
-          </Button>
+          <>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/insights/recap">
+                <Sparkles aria-hidden />
+                Monthly recap
+              </Link>
+            </Button>
+            <Button asChild variant="secondary" size="sm">
+              <a href={`/api/export/transactions?from=${range.start}&to=${range.end}`} download>
+                <Download aria-hidden />
+                Export CSV
+              </a>
+            </Button>
+          </>
         }
       />
 
@@ -132,6 +141,8 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
             <Amount value={k.forecast} />
           </Kpi>
         </section>
+
+        {data.preset === "month" && <OinkTakeCard userId={user.id} pigName={user.pigName} />}
 
         <div className="lg:col-span-7">
           <CategoryBreakdown categories={data.categories} />

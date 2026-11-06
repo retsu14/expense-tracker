@@ -3,7 +3,9 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { AiSettings } from "@/components/assistant/ai-settings";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
+import { AppLockSettings } from "@/components/settings/app-lock-settings";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { InstallAppRow } from "@/components/pwa/install-prompt";
 import { DataSettings } from "@/components/settings/data-settings";
@@ -79,6 +81,13 @@ export default async function SettingsPage() {
           <MascotSettings />
         </Card>
 
+        <Card id="ai">
+          <CardHeader>
+            <CardTitle>AI</CardTitle>
+          </CardHeader>
+          <AiSettings pigName={user.pigName} />
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Security</CardTitle>
@@ -87,6 +96,9 @@ export default async function SettingsPage() {
             <ChangePasswordForm />
             <div className="border-t border-border pt-5">
               <RecoveryCodesCard remaining={remainingCodes} username={user.username} />
+            </div>
+            <div className="border-t border-border pt-5">
+              <AppLockSettings userId={user.id} />
             </div>
           </div>
         </Card>

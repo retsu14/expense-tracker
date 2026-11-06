@@ -230,14 +230,14 @@ function BudgetRow({ item, onEdit, large }: { item: Item; onEdit: () => void; la
         </Button>
       </div>
       <ProgressBar value={item.pct} status={item.status} label={`${item.name} budget used`} />
-      <div className="flex items-baseline justify-between gap-2 text-body-sm">
-        <span>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5 text-body-sm">
+        <span className="whitespace-nowrap">
           <Amount value={item.spent} className="font-semibold" />{" "}
           <span className="text-fg-muted">of {formatPeso(item.limit)}</span>
         </span>
         <span
           className={cn(
-            "font-medium",
+            "font-medium whitespace-nowrap",
             item.status === "over"
               ? "text-expense"
               : item.status === "warn"

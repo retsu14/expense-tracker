@@ -1,20 +1,24 @@
 "use client";
 
-import { ArrowRight, Star, Trash2 } from "lucide-react";
+import { ArrowRight, Plus, Split, Star, Trash2, X } from "lucide-react";
 import { useMemo, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
+import { SmartEntry } from "@/components/assistant/smart-entry";
 import { FormAlert } from "@/components/forms/form-alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 import { Segmented } from "@/components/ui/segmented";
 import { centavosToInput, formatPeso } from "@/lib/money";
 import { isNetworkError, offlineQueue } from "@/lib/offline-queue";
 import { cn } from "@/lib/utils";
+import type { EntryDraft } from "@/modules/assistant/domain/entry-parser";
 import { evaluateAmount, isExpression } from "@/modules/ledger/domain/amount-expression";
 import type { TransactionKind } from "@/modules/ledger/domain/transaction";
 import {
+  createSplitTransactionAction,
   createTemplateAction,
   createTransactionAction,
   type quickAddContextAction,
@@ -57,6 +61,12 @@ export function QuickAddForm({
   const [note, setNote] = useState(editing?.note ?? "");
   const [favorite, setFavorite] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [split, setSplit] = useState(false);
+  const [parts, setParts] = useState<SplitPart[]>([
+    { categoryId: "", amount: "" },
+    { categoryId: "", amount: "" },
+  ]);
+  const splitting = split && kind === "expense" && !editing;
   const [errors, setErrors] = useState<Record<string, string[]>>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -93,6 +103,34 @@ export function QuickAddForm({
     void suggestCategoryAction(kind, note).then((id) => {
       if (id) setCategoryId(id);
     });
+  };
+
+  const entryContext = useMemo(
+    () => ({
+      today: ctx.today,
+      categories: ctx.categories,
+      accounts: ctx.accounts.filter((a) => !a.archived),
+    }),
+    [ctx],
+  );
+
+  const applyDraft = (d: EntryDraft) => {
+    const k = d.kind === "transfer" && ctx.accounts.length < 2 ? "expense" : d.kind;
+    if (k !== kind) changeKind(k);
+    if (d.amount) setAmount(d.amount);
+    if (d.accountId) setAccountId(d.accountId);
+    if (k === "transfer" && d.toAccountId) setToAccountId(d.toAccountId);
+    if (d.date) setDate(d.date);
+    if (d.note) setNote(d.note);
+    if (k !== "transfer" && d.categoryId) {
+      setCategoryId(d.categoryId);
+      setCategoryTouched(true);
+    } else if (k !== "transfer" && d.note.trim().length >= 2) {
+      void suggestCategoryAction(k, d.note).then((id) => {
+        if (id) setCategoryId(id);
+      });
+    }
+    if (!d.amount) amountRef.current?.focus();
   };
 
   const payload = () => ({
@@ -132,7 +170,38 @@ export function QuickAddForm({
     return ctx.categories.find((c) => c.id === categoryId)?.name ?? "Transaction";
   };
 
+  const submitSplit = () => {
+    setFormError(null);
+    startTransition(async () => {
+      let res;
+      try {
+        res = await createSplitTransactionAction({
+          accountId,
+          date,
+          note,
+          idempotencyKey: idempotencyKey.current,
+          parts: parts.filter((p) => p.categoryId || p.amount),
+        });
+      } catch {
+        setFormError("Splits need a connection. Try again when you're online.");
+        return;
+      }
+      if (!res.ok) {
+        setErrors(res.error.fieldErrors ?? {});
+        if (!res.error.fieldErrors) setFormError(res.error.message);
+        return;
+      }
+      onDone();
+      celebrateLog(res.data.total, "expense");
+      toast.success(`Split saved · ${formatPeso(res.data.total)}`);
+    });
+  };
+
   const submit = () => {
+    if (splitting) {
+      submitSplit();
+      return;
+    }
     setFormError(null);
     startTransition(async () => {
       if (!editing && !navigator.onLine) {
@@ -264,6 +333,8 @@ export function QuickAddForm({
         ]}
       />
 
+      {!editing && !splitting && <SmartEntry context={entryContext} onApply={applyDraft} />}
+
       {!editing && templates.length > 0 && (
         <div className="grid gap-2">
           <p className="text-caption text-fg-muted">Favorites · tap to log instantly</p>
@@ -287,56 +358,59 @@ export function QuickAddForm({
         </div>
       )}
 
-      <div className="grid gap-1.5">
-        <Label htmlFor="qa-amount">Amount</Label>
-        <div className="relative">
-          <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-h2 text-fg-muted">
-            ₱
-          </span>
-          <input
-            ref={amountRef}
-            id="qa-amount"
-            inputMode="decimal"
-            autoComplete="off"
-            autoFocus
-            placeholder="0"
-            value={amount}
-            aria-invalid={err("amount") ? true : undefined}
-            aria-describedby="qa-amount-help"
-            onChange={(e) => {
-              setAmount(e.target.value.replace(/[^\d.,+\-*/x×÷() ]/gi, ""));
-            }}
-            className="h-16 w-full rounded-md border border-border bg-surface-2 pr-4 pl-10 text-display-sm text-fg tabular placeholder:text-fg-muted focus-visible:border-ring aria-invalid:border-expense"
-          />
-        </div>
-        <div id="qa-amount-help" className="flex min-h-6 items-center justify-between gap-2">
-          {err("amount") ? (
-            <p className="text-body-sm text-expense">{err("amount")}</p>
-          ) : (
-            <p className="text-caption font-normal text-fg-muted">
-              {isExpression(amount) && evaluated !== null
-                ? `= ${formatPeso(evaluated)}`
-                : "Math works: 120+30"}
-            </p>
-          )}
-          <div className="flex gap-1">
-            {OPERATORS.map((op) => (
-              <button
-                key={op}
-                type="button"
-                aria-label={`Insert ${op}`}
-                onClick={() => {
-                  insertOperator(op);
-                }}
-                className="size-9 cursor-pointer rounded-sm bg-surface-2 text-body font-semibold text-fg-muted hover:text-fg"
-              >
-                {op}
-              </button>
-            ))}
+      {splitting ? (
+        <SplitEditor parts={parts} setParts={setParts} categories={categories} errors={errors} />
+      ) : (
+        <div className="grid gap-1.5">
+          <Label htmlFor="qa-amount">Amount</Label>
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2 text-h2 text-fg-muted">
+              ₱
+            </span>
+            <input
+              ref={amountRef}
+              id="qa-amount"
+              inputMode="decimal"
+              autoComplete="off"
+              autoFocus
+              placeholder="0"
+              value={amount}
+              aria-invalid={err("amount") ? true : undefined}
+              aria-describedby="qa-amount-help"
+              onChange={(e) => {
+                setAmount(e.target.value.replace(/[^\d.,+\-*/x×÷() ]/gi, ""));
+              }}
+              className="h-16 w-full rounded-md border border-border bg-surface-2 pr-4 pl-10 text-display-sm text-fg tabular placeholder:text-fg-muted focus-visible:border-ring aria-invalid:border-expense"
+            />
+          </div>
+          <div id="qa-amount-help" className="flex min-h-6 items-center justify-between gap-2">
+            {err("amount") ? (
+              <p className="text-body-sm text-expense">{err("amount")}</p>
+            ) : (
+              <p className="text-caption font-normal text-fg-muted">
+                {isExpression(amount) && evaluated !== null
+                  ? `= ${formatPeso(evaluated)}`
+                  : "Math works: 120+30"}
+              </p>
+            )}
+            <div className="flex gap-1">
+              {OPERATORS.map((op) => (
+                <button
+                  key={op}
+                  type="button"
+                  aria-label={`Insert ${op}`}
+                  onClick={() => {
+                    insertOperator(op);
+                  }}
+                  className="size-9 cursor-pointer rounded-sm bg-surface-2 text-body font-semibold text-fg-muted hover:text-fg"
+                >
+                  {op}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
-
+      )}
       {kind === "transfer" ? (
         <div className="grid gap-4">
           <WalletPicker
@@ -371,50 +445,54 @@ export function QuickAddForm({
         </div>
       ) : (
         <>
-          <fieldset className="grid gap-2">
-            <legend className="mb-2 text-body-sm font-medium">Category</legend>
-            <div className="grid grid-cols-4 gap-2">
-              {visible.map((c) => {
-                const on = c.id === categoryId;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    aria-pressed={on}
-                    onClick={() => {
-                      setCategoryId(c.id);
-                      setCategoryTouched(true);
-                    }}
-                    className={cn(
-                      "flex min-h-18 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-1.5 text-center text-caption leading-tight transition-colors duration-120",
-                      on ? "border-accent bg-surface-2" : "border-transparent hover:bg-surface-2",
-                    )}
-                  >
-                    <CategoryIcon icon={c.icon} color={c.color} size="sm" />
-                    <span className="line-clamp-2">{c.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-            {selectedHidden && (
-              <p className="text-caption text-fg-muted">
-                Selected: {ctx.categories.find((c) => c.id === categoryId)?.name}
-              </p>
-            )}
-            {categories.length > VISIBLE_CATEGORIES && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setShowAll((s) => !s);
-                }}
-              >
-                {showAll ? "Show less" : `More (${categories.length - VISIBLE_CATEGORIES})`}
-              </Button>
-            )}
-            {err("categoryId") && <p className="text-body-sm text-expense">{err("categoryId")}</p>}
-          </fieldset>
+          {!splitting && (
+            <fieldset className="grid gap-2">
+              <legend className="mb-2 text-body-sm font-medium">Category</legend>
+              <div className="grid grid-cols-4 gap-2">
+                {visible.map((c) => {
+                  const on = c.id === categoryId;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      aria-pressed={on}
+                      onClick={() => {
+                        setCategoryId(c.id);
+                        setCategoryTouched(true);
+                      }}
+                      className={cn(
+                        "flex min-h-18 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-1.5 text-center text-caption leading-tight transition-colors duration-120",
+                        on ? "border-accent bg-surface-2" : "border-transparent hover:bg-surface-2",
+                      )}
+                    >
+                      <CategoryIcon icon={c.icon} color={c.color} size="sm" />
+                      <span className="line-clamp-2">{c.name}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {selectedHidden && (
+                <p className="text-caption text-fg-muted">
+                  Selected: {ctx.categories.find((c) => c.id === categoryId)?.name}
+                </p>
+              )}
+              {categories.length > VISIBLE_CATEGORIES && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowAll((s) => !s);
+                  }}
+                >
+                  {showAll ? "Show less" : `More (${categories.length - VISIBLE_CATEGORIES})`}
+                </Button>
+              )}
+              {err("categoryId") && (
+                <p className="text-body-sm text-expense">{err("categoryId")}</p>
+              )}
+            </fieldset>
+          )}
           <WalletPicker
             label="Wallet"
             accounts={ctx.accounts}
@@ -494,15 +572,29 @@ export function QuickAddForm({
           </Button>
         ) : (
           kind !== "transfer" && (
-            <Chip
-              selected={favorite}
-              onClick={() => {
-                setFavorite((f) => !f);
-              }}
-            >
-              <Star className={cn("size-4", favorite ? "fill-current" : "")} aria-hidden />
-              Save as favorite
-            </Chip>
+            <>
+              {kind === "expense" && (
+                <Chip
+                  selected={split}
+                  onClick={() => {
+                    setSplit((v) => !v);
+                    setErrors({});
+                  }}
+                >
+                  <Split className="size-4" aria-hidden />
+                  Split
+                </Chip>
+              )}
+              <Chip
+                selected={favorite}
+                onClick={() => {
+                  setFavorite((f) => !f);
+                }}
+              >
+                <Star className={cn("size-4", favorite ? "fill-current" : "")} aria-hidden />
+                Save as favorite
+              </Chip>
+            </>
           )
         )}
         <Button type="submit" size="lg" className="ml-auto min-w-32" disabled={pending}>
@@ -552,5 +644,95 @@ function WalletPicker({
       </div>
       {error && <p className="text-body-sm text-expense">{error}</p>}
     </div>
+  );
+}
+
+type SplitPart = { categoryId: string; amount: string };
+
+function SplitEditor({
+  parts,
+  setParts,
+  categories,
+  errors,
+}: {
+  parts: SplitPart[];
+  setParts: (fn: (p: SplitPart[]) => SplitPart[]) => void;
+  categories: QuickAddContext["categories"];
+  errors: Record<string, string[]>;
+}) {
+  const total = parts.reduce((sum, p) => sum + (evaluateAmount(p.amount) ?? 0), 0);
+  const update = (i: number, patch: Partial<SplitPart>) => {
+    setParts((list) => list.map((p, j) => (j === i ? { ...p, ...patch } : p)));
+  };
+
+  return (
+    <fieldset className="grid gap-2">
+      <legend className="mb-2 flex w-full items-baseline justify-between text-body-sm font-medium">
+        Split between categories
+        <span className="text-h3 tabular">{formatPeso(total)}</span>
+      </legend>
+      {parts.map((p, i) => (
+        <div key={i} className="grid gap-1">
+          <div className="flex gap-2">
+            <div className="min-w-0 flex-1">
+              <NativeSelect
+                aria-label={`Part ${i + 1} category`}
+                value={p.categoryId}
+                onChange={(e) => {
+                  update(i, { categoryId: e.target.value });
+                }}
+              >
+                <option value="">Category…</option>
+                {categories.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </NativeSelect>
+            </div>
+            <Input
+              aria-label={`Part ${i + 1} amount`}
+              inputMode="decimal"
+              placeholder="0"
+              value={p.amount}
+              onChange={(e) => {
+                update(i, { amount: e.target.value });
+              }}
+              className="w-28 tabular"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              aria-label={`Remove part ${i + 1}`}
+              disabled={parts.length <= 2}
+              onClick={() => {
+                setParts((list) => list.filter((_, j) => j !== i));
+              }}
+            >
+              <X aria-hidden />
+            </Button>
+          </div>
+          {(errors[`parts.${i}.categoryId`] ?? errors[`parts.${i}.amount`]) && (
+            <p className="text-body-sm text-expense">
+              {errors[`parts.${i}.categoryId`]?.[0] ?? errors[`parts.${i}.amount`]?.[0]}
+            </p>
+          )}
+        </div>
+      ))}
+      {errors.parts && <p className="text-body-sm text-expense">{errors.parts[0]}</p>}
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        disabled={parts.length >= 8}
+        onClick={() => {
+          setParts((list) => [...list, { categoryId: "", amount: "" }]);
+        }}
+      >
+        <Plus aria-hidden />
+        Add part
+      </Button>
+    </fieldset>
   );
 }

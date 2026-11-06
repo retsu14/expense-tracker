@@ -135,3 +135,34 @@ export const notifications = pgTable(
     index("notifications_user_idx").on(t.userId, t.createdAt.desc()),
   ],
 );
+
+export const debts = pgTable(
+  "debts",
+  {
+    id: id(),
+    userId: userRef(),
+    direction: text().$type<"i_owe" | "owed_to_me">().notNull(),
+    person: text().notNull(),
+    principal: money().notNull(),
+    dueDate: date({ mode: "string" }),
+    note: text().notNull().default(""),
+    settledAt: timestamp({ withTimezone: true }),
+    ...timestamps,
+  },
+  (t) => [index("debts_user_idx").on(t.userId)],
+);
+
+export const debtPayments = pgTable(
+  "debt_payments",
+  {
+    id: id(),
+    debtId: uuid()
+      .notNull()
+      .references(() => debts.id, { onDelete: "cascade" }),
+    userId: userRef(),
+    amount: money().notNull(),
+    transactionId: uuid().references(() => transactions.id, { onDelete: "set null" }),
+    createdAt: timestamp({ withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("debt_payments_debt_idx").on(t.debtId)],
+);

@@ -21,6 +21,13 @@ import {
   updateGoal,
   updateRecurring,
 } from "@/modules/planning/application/planning.use-cases";
+import {
+  createDebt,
+  deleteDebt,
+  recordDebtPayment,
+  settleDebt,
+  updateDebt,
+} from "@/modules/planning/application/debts.use-cases";
 import { runAction } from "@/shared/action";
 import { planningDeps } from "@/shared/container";
 import { ok, type Result } from "@/shared/kernel/result";
@@ -120,4 +127,24 @@ export async function markNotificationsReadAction() {
     await markNotificationsRead(planningDeps(), uid);
     return ok(undefined);
   });
+}
+
+export async function createDebtAction(input: unknown) {
+  return mutate((uid) => createDebt(planningDeps(), uid, input));
+}
+
+export async function updateDebtAction(id: string, input: unknown) {
+  return mutate((uid) => updateDebt(planningDeps(), uid, id, input));
+}
+
+export async function recordDebtPaymentAction(input: unknown) {
+  return mutate((uid) => recordDebtPayment(planningDeps(), uid, input));
+}
+
+export async function settleDebtAction(id: string) {
+  return mutate((uid) => settleDebt(planningDeps(), uid, id));
+}
+
+export async function deleteDebtAction(id: string) {
+  return mutate((uid) => deleteDebt(planningDeps(), uid, id));
 }

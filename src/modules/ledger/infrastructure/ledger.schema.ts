@@ -65,7 +65,7 @@ export const categories = pgTable(
     color: text().notNull(),
     archived: boolean().notNull().default(false),
     sort: smallint().notNull().default(0),
-    system: text().$type<"fees">(),
+    system: text().$type<"fees" | "debt_out" | "debt_in">(),
     ...timestamps,
   },
   (t) => [index("categories_user_idx").on(t.userId, t.kind, t.sort)],
@@ -84,6 +84,7 @@ export const transactions = pgTable(
     toAccountId: uuid().references(() => accounts.id),
     categoryId: uuid().references(() => categories.id),
     linkedId: uuid(),
+    splitGroup: uuid(),
     occurredAt: timestamp({ withTimezone: true }).notNull(),
     note: text().notNull().default(""),
     tags: text()
@@ -99,6 +100,7 @@ export const transactions = pgTable(
     index("transactions_user_category_idx").on(t.userId, t.categoryId, t.occurredAt),
     index("transactions_user_account_idx").on(t.userId, t.accountId, t.occurredAt),
     index("transactions_linked_idx").on(t.linkedId),
+    index("transactions_split_idx").on(t.splitGroup),
     index("transactions_note_trgm_idx").using("gin", t.note.op("gin_trgm_ops")),
     index("transactions_tags_idx").using("gin", t.tags),
     uniqueIndex("transactions_idempotency_key").on(t.userId, t.idempotencyKey),
@@ -122,4 +124,16 @@ export const templates = pgTable(
     ...timestamps,
   },
   (t) => [index("templates_user_idx").on(t.userId, t.sort)],
+);
+
+export const savedFilters = pgTable(
+  "saved_filters",
+  {
+    id: id(),
+    userId: userRef(),
+    name: text().notNull(),
+    params: jsonb().$type<Record<string, string>>().notNull(),
+    ...timestamps,
+  },
+  (t) => [index("saved_filters_user_idx").on(t.userId)],
 );

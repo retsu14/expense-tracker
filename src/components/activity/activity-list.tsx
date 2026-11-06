@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderCircle } from "lucide-react";
+import { ListChecks, LoaderCircle } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import { loadTransactionsAction } from "@/modules/ledger/presentation/actions";
 import { addDays, toYmd } from "@/shared/kernel/time";
 import { useUiStore } from "@/stores/ui-store";
 
+import { BulkBar, type BulkOption } from "./bulk-bar";
 import { TransactionRow } from "./transaction-row";
 
 type Page = {
@@ -28,9 +29,13 @@ type Props = {
   params: Record<string, string>;
   today: string;
   empty: { title: string; description: string; action?: ReactNode };
+  categories: (BulkOption & { kind: "expense" | "income" })[];
+  accounts: BulkOption[];
 };
 
-export function ActivityList({ initial, params, today, empty }: Props) {
+export function ActivityList({ initial, params, today, empty, categories, accounts }: Props) {
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const signature = JSON.stringify(initial);
   const [source, setSource] = useState(signature);
   const [items, setItems] = useState(initial.items);
@@ -47,7 +52,22 @@ export function ActivityList({ initial, params, today, empty }: Props) {
     setItems(initial.items);
     setCursor(initial.nextCursor);
     setTotals(new Map(initial.dayTotals.map((d) => [d.day, d])));
+    setSelected(new Set());
   }
+
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const stopSelecting = () => {
+    setSelecting(false);
+    setSelected(new Set());
+  };
 
   const loadMore = useCallback(() => {
     if (!cursor || loading) return;
@@ -105,6 +125,20 @@ export function ActivityList({ initial, params, today, empty }: Props) {
 
   return (
     <div className="grid grid-cols-1 gap-4">
+      <div className="-mb-2 flex justify-end">
+        <Button
+          variant="ghost"
+          size="sm"
+          aria-pressed={selecting}
+          onClick={() => {
+            if (selecting) stopSelecting();
+            else setSelecting(true);
+          }}
+        >
+          <ListChecks aria-hidden />
+          {selecting ? "Done" : "Select"}
+        </Button>
+      </div>
       {groups.map(([day, txs]) => {
         const total = totals.get(day);
         return (
@@ -138,12 +172,27 @@ export function ActivityList({ initial, params, today, empty }: Props) {
                   onDelete={() => {
                     remove(tx);
                   }}
+                  selecting={selecting}
+                  selected={selected.has(tx.id)}
+                  onToggle={() => {
+                    toggle(tx.id);
+                  }}
                 />
               ))}
             </ul>
           </section>
         );
       })}
+
+      {selecting && (
+        <BulkBar
+          ids={[...selected]}
+          kinds={items.filter((i) => selected.has(i.id)).map((i) => i.kind)}
+          categories={categories}
+          accounts={accounts}
+          onDone={stopSelecting}
+        />
+      )}
 
       <div ref={sentinel} className="flex justify-center py-2">
         {cursor ? (

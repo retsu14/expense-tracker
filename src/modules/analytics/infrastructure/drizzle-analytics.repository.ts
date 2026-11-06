@@ -70,7 +70,7 @@ export function drizzleAnalyticsRepository(db: Db): AnalyticsRepository {
     async daily(userId, from, to, tz) {
       const day = sql<string>`to_char(${transactions.occurredAt} at time zone ${tz}, 'YYYY-MM-DD')`;
       return db
-        .select({ day, expense: sumWhen("expense") })
+        .select({ day, expense: sumWhen("expense"), income: sumWhen("income") })
         .from(transactions)
         .where(live(userId, from, to))
         .groupBy(sql`1`)

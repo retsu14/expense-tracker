@@ -1,6 +1,7 @@
 import type { Ymd } from "@/shared/kernel/time";
 
 import type { Budget } from "./budget";
+import type { Debt } from "./debt";
 import type { Goal } from "./goal";
 import type { Recurring, RecurringPost } from "./recurring";
 
@@ -55,6 +56,23 @@ export type PlanningRepository = {
     userId: string;
     amount: number;
     note: string;
+  }): Promise<void>;
+
+  listDebts(userId: string): Promise<(Debt & { paid: number })[]>;
+  getDebt(userId: string, id: string): Promise<(Debt & { paid: number }) | null>;
+  createDebt(debt: Debt): Promise<void>;
+  updateDebt(
+    userId: string,
+    id: string,
+    patch: Partial<Omit<Debt, "id" | "userId">>,
+  ): Promise<boolean>;
+  deleteDebt(userId: string, id: string): Promise<boolean>;
+  addDebtPayment(p: {
+    id: string;
+    debtId: string;
+    userId: string;
+    amount: number;
+    transactionId: string | null;
   }): Promise<void>;
 
   listNotifications(userId: string, limit: number): Promise<Notification[]>;

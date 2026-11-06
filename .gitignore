@@ -44,3 +44,7 @@ next-env.d.ts
 
 # local-only notes
 *.local.md
+
+/test-results/
+/playwright-report/
+/e2e/.auth/

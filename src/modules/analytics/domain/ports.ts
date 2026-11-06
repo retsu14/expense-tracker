@@ -41,7 +41,12 @@ export type AnalyticsRepository = {
     to: Date,
     tz: string,
   ): Promise<{ month: string; expense: number; income: number }[]>;
-  daily(userId: string, from: Date, to: Date, tz: string): Promise<{ day: Ymd; expense: number }[]>;
+  daily(
+    userId: string,
+    from: Date,
+    to: Date,
+    tz: string,
+  ): Promise<{ day: Ymd; expense: number; income: number }[]>;
   weekday(
     userId: string,
     from: Date,

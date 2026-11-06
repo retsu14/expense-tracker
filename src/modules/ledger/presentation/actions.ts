@@ -24,6 +24,13 @@ import {
   updateCategory,
   updateTransaction,
 } from "@/modules/ledger/application/ledger.use-cases";
+import {
+  bulkUpdateTransactions,
+  createSplitTransaction,
+  deleteSavedFilter,
+  importTransactions,
+  saveFilter,
+} from "@/modules/ledger/application/ledger-extras.use-cases";
 import { parseFilterParams } from "@/modules/ledger/domain/transaction-query";
 import { requireUser } from "@/modules/identity/presentation/dal";
 import { runAction } from "@/shared/action";
@@ -143,4 +150,24 @@ export async function quickAddContextAction(editId: string | null) {
     editId ? getTransactionForEdit(deps, user.id, editId) : null,
   ]);
   return { ...context, transaction };
+}
+
+export async function createSplitTransactionAction(input: unknown) {
+  return mutate((uid) => createSplitTransaction(ledgerDeps(), uid, input));
+}
+
+export async function bulkUpdateTransactionsAction(input: unknown) {
+  return mutate((uid) => bulkUpdateTransactions(ledgerDeps(), uid, input));
+}
+
+export async function saveFilterAction(input: unknown) {
+  return mutate((uid) => saveFilter(ledgerDeps(), uid, input));
+}
+
+export async function deleteSavedFilterAction(id: string) {
+  return mutate((uid) => deleteSavedFilter(ledgerDeps(), uid, id));
+}
+
+export async function importTransactionsAction(input: unknown) {
+  return mutate((uid) => importTransactions(ledgerDeps(), uid, input));
 }

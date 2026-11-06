@@ -298,7 +298,7 @@ export function CategoryBreakdown({ categories }: { categories: CategoryRow[] })
                   />
                   <span className="min-w-0 flex-1 truncate font-medium">{c.name}</span>
                   <span className="text-fg-muted tabular">{c.share}%</span>
-                  <span className="w-24 text-right font-semibold tabular">
+                  <span className="shrink-0 text-right font-semibold tabular xs:w-24">
                     {money.full(c.total)}
                   </span>
                 </div>

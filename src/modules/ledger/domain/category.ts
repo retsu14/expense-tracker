@@ -57,10 +57,12 @@ export type Category = {
   color: string;
   archived: boolean;
   sort: number;
-  system: "fees" | null;
+  system: "fees" | "debt_out" | "debt_in" | null;
 };
 
-type Seed = Pick<Category, "name" | "kind" | "icon" | "color"> & { system?: "fees" };
+type Seed = Pick<Category, "name" | "kind" | "icon" | "color"> & {
+  system?: "fees" | "debt_out" | "debt_in";
+};
 
 const c = CATEGORY_COLORS;
 
@@ -81,6 +83,7 @@ export const DEFAULT_CATEGORIES: Seed[] = [
   { name: "Gifts", kind: "expense", icon: "gift", color: c[1] },
   { name: "Fees", kind: "expense", icon: "percent", color: c[7], system: "fees" },
   { name: "Other", kind: "expense", icon: "circle-dollar-sign", color: c[7] },
+  { name: "Utang payments", kind: "expense", icon: "users", color: c[7], system: "debt_out" },
   { name: "Salary", kind: "income", icon: "briefcase", color: c[2] },
   { name: "Freelance", kind: "income", icon: "laptop", color: c[3] },
   { name: "Business", kind: "income", icon: "store", color: c[4] },
@@ -88,6 +91,7 @@ export const DEFAULT_CATEGORIES: Seed[] = [
   { name: "Allowance", kind: "income", icon: "coins", color: c[5] },
   { name: "Refund", kind: "income", icon: "rotate-ccw", color: c[6] },
   { name: "Other Income", kind: "income", icon: "wallet", color: c[7] },
+  { name: "Utang collected", kind: "income", icon: "users", color: c[7], system: "debt_in" },
 ];
 
 export function validateCategoryName(input: string): Result<string> {

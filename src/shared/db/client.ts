@@ -9,7 +9,14 @@ import * as schema from "./schema";
 const globalForDb = globalThis as unknown as { pool?: Pool };
 
 function createDb() {
-  const pool = globalForDb.pool ?? new Pool({ connectionString: env().DATABASE_URL });
+  let pool = globalForDb.pool;
+  if (!pool) {
+    pool = new Pool({ connectionString: env().DATABASE_URL, idleTimeoutMillis: 30_000 });
+    // idle sockets can drop; without a listener Node treats the event as fatal
+    pool.on("error", (e: Error) => {
+      console.error("[db] idle client error:", e.message);
+    });
+  }
   if (env().NODE_ENV !== "production") globalForDb.pool = pool;
   return drizzle({ client: pool, schema, casing: "snake_case" });
 }

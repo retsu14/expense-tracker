@@ -20,11 +20,13 @@
     "db:studio": "drizzle-kit studio",
     "prepare": "husky",
     "check": "npm run typecheck && npm run lint && npm run format:check && npm test",
-    "icons": "node scripts/generate-icons.mjs"
+    "icons": "node scripts/generate-icons.mjs",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1163.0",
     "@aws-sdk/s3-request-presigner": "^3.1163.0",
+    "@mlc-ai/web-llm": "0.2.86",
     "@neondatabase/serverless": "^1.2.0",
     "@node-rs/argon2": "^2.2.2",
     "class-variance-authority": "^0.7.1",
@@ -47,8 +49,10 @@
     "zustand": "^5.0.16"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@commitlint/cli": "^21.2.4",
     "@commitlint/config-conventional": "^21.2.4",
+    "@playwright/test": "1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^24.19.2",
     "@types/react": "^19",
@@ -64,5 +68,8 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^5.1.0"
+  },
+  "overrides": {
+    "playwright-core": "1.64.1"
   }
 }

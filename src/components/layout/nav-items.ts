@@ -1,6 +1,7 @@
 import {
   ChartPie,
   House,
+  MessageCircleHeart,
   type LucideIcon,
   ReceiptText,
   Settings,
@@ -18,6 +19,7 @@ export const primaryNav: NavItem[] = [
 ];
 
 export const secondaryNav: NavItem[] = [
+  { href: "/assistant", label: "Ask Oink", icon: MessageCircleHeart },
   { href: "/accounts", label: "Accounts", icon: Wallet },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

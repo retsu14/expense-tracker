@@ -105,6 +105,7 @@ export function AvatarUploader({ name, src }: { name: string; src: string | null
           accept="image/png,image/jpeg,image/webp,image/heic"
           className="sr-only"
           id="avatar-file"
+          aria-label="Upload profile photo"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void upload(file);

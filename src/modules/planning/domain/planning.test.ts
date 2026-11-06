@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { alertLevel, budgetProgress, safeToSpendPerDay, suggestBudgetAmount } from "./budget";
+import { debtProgress, debtTotals } from "./debt";
 import { goalProgress } from "./goal";
 import { monthRange, nextPayday, payCycleRange, previousRange } from "./period";
 import { describeSchedule, occurrences, occurrenceStatus } from "./recurring";
@@ -110,5 +111,33 @@ describe("goals", () => {
     expect(p.pct).toBe(25);
     expect(p.monthlyNeeded).toBe(750_000);
     expect(goalProgress({ ...goal, deadline: null }, 0, "2026-03-01").monthlyNeeded).toBeNull();
+  });
+});
+
+describe("debts", () => {
+  const base = {
+    id: "d",
+    userId: "u",
+    direction: "i_owe" as const,
+    person: "Ate Joy",
+    principal: 500_000,
+    dueDate: "2026-03-20",
+    note: "",
+    settledAt: null,
+  };
+
+  it("tracks remaining, status and totals", () => {
+    const open = debtProgress(base, 200_000, "2026-03-01");
+    expect(open).toMatchObject({ remaining: 300_000, pct: 40, status: "open" });
+    expect(debtProgress(base, 0, "2026-03-15").status).toBe("due_soon");
+    expect(debtProgress(base, 0, "2026-03-21").status).toBe("overdue");
+    expect(debtProgress(base, 500_000, "2026-03-21").status).toBe("settled");
+
+    const lent = debtProgress(
+      { ...base, id: "e", direction: "owed_to_me", principal: 100_000 },
+      0,
+      "2026-03-01",
+    );
+    expect(debtTotals([open, lent])).toEqual({ owe: 300_000, owed: 100_000, net: -200_000 });
   });
 });
