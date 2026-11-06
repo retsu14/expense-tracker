@@ -4,10 +4,12 @@ import { Plus } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
+import type { ShellUser } from "./app-shell";
 import { isActive, type NavItem, primaryNav, secondaryNav } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
@@ -29,7 +31,7 @@ function SidebarLink({ item, pathname }: { item: NavItem; pathname: string }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ user }: { user: ShellUser }) {
   const pathname = usePathname();
   const setQuickAddOpen = useUiStore((s) => s.setQuickAddOpen);
 
@@ -51,9 +53,23 @@ export function Sidebar() {
         ))}
       </nav>
       <nav aria-label="Account" className="mt-auto flex flex-col gap-1 border-t border-border pt-4">
-        {secondaryNav.map((item) => (
-          <SidebarLink key={item.href} item={item} pathname={pathname} />
-        ))}
+        {secondaryNav
+          .filter((item) => item.href !== "/settings")
+          .map((item) => (
+            <SidebarLink key={item.href} item={item} pathname={pathname} />
+          ))}
+        <Link
+          href="/settings"
+          className="mt-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors duration-120 hover:bg-surface-2/60"
+        >
+          <Avatar name={user.displayName} src={user.avatarUrl} size={36} />
+          <span className="min-w-0">
+            <span className="block truncate text-body-sm font-semibold">{user.displayName}</span>
+            <span className="block truncate text-caption font-normal text-fg-muted">
+              @{user.username}
+            </span>
+          </span>
+        </Link>
       </nav>
     </aside>
   );

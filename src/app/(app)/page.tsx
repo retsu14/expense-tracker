@@ -3,14 +3,16 @@ import { PageHeader } from "@/components/layout/page-header";
 import { HomePig } from "@/components/pig/home-pig";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { requireUser } from "@/modules/identity/presentation/dal";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const user = await requireUser();
   return (
     <>
       <PageHeader title="Home" description="Your money at a glance." />
       <div className="grid gap-4 lg:grid-cols-12 lg:gap-6">
         <Card className="flex items-center justify-center overflow-visible lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
-          <HomePig />
+          <HomePig name={user.displayName} pigName={user.pigName} />
         </Card>
         <Card className="lg:col-span-8 lg:row-start-1">
           <p className="text-body-sm text-fg-muted">Safe to spend today</p>

@@ -6,7 +6,9 @@ import { NavRail } from "./nav-rail";
 import { QuickAddModal } from "./quick-add-modal";
 import { Sidebar } from "./sidebar";
 
-export function AppShell({ children }: { children: ReactNode }) {
+export type ShellUser = { displayName: string; username: string; avatarUrl: string | null };
+
+export function AppShell({ children, user }: { children: ReactNode; user: ShellUser }) {
   return (
     <div className="flex min-h-dvh">
       <a
@@ -15,10 +17,10 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         Skip to content
       </a>
-      <Sidebar />
+      <Sidebar user={user} />
       <NavRail />
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileTopBar />
+        <MobileTopBar user={user} />
         <main
           id="main"
           className="mx-auto w-full max-w-[1200px] flex-1 px-4 pt-6 pb-28 md:px-6 md:pt-8 md:pb-10 lg:px-8"

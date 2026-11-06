@@ -12,6 +12,8 @@ services:
     env_file:
       - path: .env
         required: false
+      - path: .env.local
+        required: false
     environment:
       NODE_ENV: development
       WATCHPACK_POLLING: ${WATCHPACK_POLLING:-true}

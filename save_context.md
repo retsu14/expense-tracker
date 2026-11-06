@@ -52,7 +52,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Tokens in `src/app/globals.css` (`bg/surface/surface-2/border/fg/fg-muted/accent/income/expense/warning/pig`), type utilities `text-display|h1|h2|h3|body|body-sm|caption`. `cn` in `src/lib/utils.ts` is extended so tailwind-merge knows these font sizes — add any new `text-*` size there.
 - Theme: next-themes class `dark`/`light`, default dark.
 - DB: `db()` lazy (Neon Pool + Drizzle, `casing: snake_case`), `Tx` type, column helpers `id()/timestamps/softDelete` in `src/shared/db/columns.ts`. Module schemas go in `src/modules/*/infrastructure/*.schema.ts` and must be re-exported from `src/shared/db/schema.ts`.
-- `env()` lazy Zod-validated in `src/shared/env.ts`. Needs `.env` (copy `.env.example`).
+- `env()` lazy Zod-validated in `src/shared/env.ts`. Secrets live in `.env.local` (Next, drizzle.config and docker compose all load it; `.env` also supported).
 - Kernel: `Money` (bigint centavos), `Result/ok/err/DomainError/ActionResult`, `newId` (UUIDv7), `Clock`.
 - ESLint `boundaries/dependencies` enforces domain/application purity (verified).
 - UI: `Button`, `Input`, `Label`, `Card`, `Skeleton`, `EmptyState`, `ResponsiveModal` (vaul <768, dialog ≥768), `ThemeSwitcher`, `Toaster`. Shell: `Sidebar` (lg), `NavRail` (md), `BottomNav` + `MobileTopBar` (<md), `QuickAddModal` (placeholder) via `useUiStore`.
@@ -68,12 +68,23 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - `HomePig` on Home sets mood + time-based greeting. Dev playground at `/dev/pig` (404 in production).
 - Reduced motion: only blink + static extras.
 
+## Identity notes (Phase 2)
+
+- Module `src/modules/identity`: domain (user/password/recovery-code/session rules + ports), application (`auth.use-cases.ts`, `account.use-cases.ts`, zod `schemas.ts`, `in-memory.ts` fakes for tests), infrastructure (`identity.schema.ts`, drizzle repos + DB rate limiter, argon2id + sha256 tokens), presentation (`actions.ts` server actions, `dal.ts` `getCurrentUser`/`requireUser`, `session-cookie.ts`).
+- Composition root `src/shared/container.ts` → `identityDeps()`. Shared helpers: `src/shared/validation.ts` `parse()`, `src/shared/action.ts` `runAction/formToObject`, `src/shared/storage/r2-storage.ts`.
+- Tables: users (unique lower(username)), sessions (id = sha256(token)), recovery_codes, auth_attempts. Migration `drizzle/0000_identity.sql` applied to Neon.
+- Cookie `oink_session` (httpOnly, lax, 30d). `src/proxy.ts` = optimistic cookie check + sliding cookie refresh; real check in `requireUser()` (redirects to `/api/auth/expired` which clears cookie → `/login?expired=1`). DB session slides when <15d left, lastSeen touched hourly.
+- Rate limits: login 10/15m per username + 50/15m per IP, reset 5/15m per username + 20 per IP, register 10/h per IP.
+- Forms: `useFormAction(action)` → `formProps` (= `action` + `onSubmit`, so pre-hydration submits still POST to the server action, never GET), `fieldError()`, `formError`. `Field` wires label/aria. `PasswordInput` drives pig cover-eyes via `useUiStore`.
+- Avatar: client resizes to 256px webp → `createAvatarUploadAction` presigned PUT → browser PUT to R2 → `confirmAvatarAction` (HEAD checks size/type/prefix) → old avatar deleted. **R2 bucket needs a CORS policy allowing PUT from app origins.**
+- Browser-pane testing quirk: requestAnimationFrame stalls in the hidden pane, so Suspense reveals/toasts/animations only show after a screenshot.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
 - [x] 0 Foundation
 - [x] 1 Pig v1
-- [ ] 2 Identity
+- [x] 2 Identity
 - [ ] 3 Onboarding + Ledger
 - [ ] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [ ] 5 Insights
@@ -88,4 +99,5 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Plan v2: answers locked, UI/UX spec (tokens, type scale, IA, wireframes), recovery-code forgot password, Ollama model picker.
 - 2026-11-06 — Plan v3: prioritized feature set, engineering standards (pagination, search, lint, tests, CI), 10 phases.
 - 2026-11-06 — Phase 0 done: deps, strict TS, ESLint (strict-type-checked + DDD boundaries), Prettier, Husky/lint-staged/commitlint, CI, Vitest, env schema, Drizzle/Neon client, kernel, tokens/fonts, UI primitives, responsive shell, error/404/loading pages, Docker env_file + healthcheck. Build + checks pass. Committed 0414004.
-- 2026-11-06 — Phase 1 done: interactive SVG pig (6 moods + cover eyes), eye-follow, blink, tap/pet/drag, speech bubble, oink sound + haptics toggles, mood domain rules + tests, Home pig, /dev/pig playground. Vitest uses native tsconfigPaths. Not committed yet.
+- 2026-11-06 — Phase 1 done: interactive SVG pig (6 moods + cover eyes), eye-follow, blink, tap/pet/drag, speech bubble, oink sound + haptics toggles, mood domain rules + tests, Home pig, /dev/pig playground. Vitest uses native tsconfigPaths. Committed 32a79e6.
+- 2026-11-06 — Phase 2 done: username/password auth (argon2id, DB sessions, proxy guard), 8 recovery codes + forgot password, rate limits, settings (profile, pig name, change password, regenerate codes, devices, sign out), avatar upload to R2, user in sidebar/top bar, Home greets by name. 26 tests total. E2E verified on Neon: register, login (wrong + right), sign out, reset with code (reuse rejected), profile save. Avatar browser upload blocked by missing R2 CORS (server-side presigned PUT verified OK); R2_PUBLIC_URL (r2.dev) times out from this network — leave it empty to fall back to signed GET URLs, or attach a custom domain. Test account `piggy_tester` exists in the DB.
