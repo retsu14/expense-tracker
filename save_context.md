@@ -59,11 +59,20 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Scripts: `typecheck`, `lint`, `format`, `test`, `check`, `db:generate|migrate|studio`.
 - Docker: after changing deps, `docker compose down && docker volume rm expense-tracker_frontend-node-modules && docker compose up -d --build`.
 
+## Pig notes (Phase 1)
+
+- `src/components/pig/pig.tsx` = `<Pig mood size coverEyes interactive listen name />`. Mood falls back to `useMascotStore` mood; `listen` shows `useMascotStore.say()` messages in its bubble.
+- Parts in `pig-parts.tsx` (Eyes, Brows, Mouth, Tears, Zzz, Sparkles, Coin, CoverHooves). viewBox 200x200, eyes at x 74/126 y 98.
+- Interactions: eye-follow (`use-eye-follow`), random blink (`use-blink`), ear twitch + tap bounce/snout wiggle via `useAnimate` selectors (`[data-ear]`, `[data-snout]`), long-press 450ms / mouse stroke = petting blush, drag only on fine pointer, Enter/Space = tap. Sound = WebAudio synth `oink-sound.ts` (off by default), haptics via `navigator.vibrate`; both toggled in Settings → Oink.
+- Mood rules: `src/modules/mascot/domain/mood.ts` `deriveMood()` (tested). Priority: celebrating > munch > sad (>100%) > worried (>= alert) > sleeping (23–5h or idle 30m) > happy.
+- `HomePig` on Home sets mood + time-based greeting. Dev playground at `/dev/pig` (404 in production).
+- Reduced motion: only blink + static extras.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
 - [x] 0 Foundation
-- [ ] 1 Pig v1
+- [x] 1 Pig v1
 - [ ] 2 Identity
 - [ ] 3 Onboarding + Ledger
 - [ ] 4 Plan (budgets, bills, recurring, goals, notifications)
@@ -78,4 +87,5 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Plan v1 + context file created. Fresh Next 16.3 scaffold.
 - 2026-11-06 — Plan v2: answers locked, UI/UX spec (tokens, type scale, IA, wireframes), recovery-code forgot password, Ollama model picker.
 - 2026-11-06 — Plan v3: prioritized feature set, engineering standards (pagination, search, lint, tests, CI), 10 phases.
-- 2026-11-06 — Phase 0 done: deps, strict TS, ESLint (strict-type-checked + DDD boundaries), Prettier, Husky/lint-staged/commitlint, CI, Vitest, env schema, Drizzle/Neon client, kernel, tokens/fonts, UI primitives, responsive shell, error/404/loading pages, Docker env_file + healthcheck. Build + checks pass. Not committed yet. `.env` not created (user must add Neon + R2 values).
+- 2026-11-06 — Phase 0 done: deps, strict TS, ESLint (strict-type-checked + DDD boundaries), Prettier, Husky/lint-staged/commitlint, CI, Vitest, env schema, Drizzle/Neon client, kernel, tokens/fonts, UI primitives, responsive shell, error/404/loading pages, Docker env_file + healthcheck. Build + checks pass. Committed 0414004.
+- 2026-11-06 — Phase 1 done: interactive SVG pig (6 moods + cover eyes), eye-follow, blink, tap/pet/drag, speech bubble, oink sound + haptics toggles, mood domain rules + tests, Home pig, /dev/pig playground. Vitest uses native tsconfigPaths. Not committed yet.

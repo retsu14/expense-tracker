@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { MascotSettings } from "@/components/settings/mascot-settings";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 
@@ -16,6 +17,12 @@ export default function SettingsPage() {
             <CardTitle>Appearance</CardTitle>
           </CardHeader>
           <ThemeSwitcher />
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Oink</CardTitle>
+          </CardHeader>
+          <MascotSettings />
         </Card>
       </div>
     </>
