@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 
 import { BottomNav } from "./bottom-nav";
+import { KeyboardShortcuts } from "./keyboard-shortcuts";
 import { MobileTopBar } from "./mobile-top-bar";
 import { NavRail } from "./nav-rail";
 import { QuickAddModal } from "./quick-add-modal";
@@ -30,6 +31,7 @@ export function AppShell({ children, user }: { children: ReactNode; user: ShellU
       </div>
       <BottomNav />
       <QuickAddModal />
+      <KeyboardShortcuts />
     </div>
   );
 }

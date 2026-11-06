@@ -23,7 +23,9 @@ export function proxy(request: NextRequest) {
   }
 
   const response = NextResponse.next();
-  if (token) response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+  if (token && request.method === "GET") {
+    response.cookies.set(SESSION_COOKIE, token, sessionCookieOptions());
+  }
   return response;
 }
 

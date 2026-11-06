@@ -8,6 +8,13 @@
       "when": 1793926991956,
       "tag": "0000_identity",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1793929585137,
+      "tag": "0001_ledger",
+      "breakpoints": true
     }
   ]
 }

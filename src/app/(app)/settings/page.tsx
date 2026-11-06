@@ -1,4 +1,5 @@
-import { LogOut } from "lucide-react";
+import { ChevronRight, LogOut, Shapes, Trash2 } from "lucide-react";
+import Link from "next/link";
 import type { Metadata } from "next";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -29,15 +30,34 @@ export default async function SettingsPage() {
   return (
     <>
       <PageHeader title="Settings" description={`Signed in as @${user.username}`} />
-      <div className="grid max-w-2xl gap-4">
+      <div className="grid max-w-2xl grid-cols-1 gap-4">
         <Card>
           <CardHeader>
             <CardTitle>Profile</CardTitle>
           </CardHeader>
-          <div className="grid gap-5">
+          <div className="grid grid-cols-1 gap-5">
             <AvatarUploader name={user.displayName} src={user.avatarUrl} />
             <ProfileForm displayName={user.displayName} pigName={user.pigName} />
           </div>
+        </Card>
+
+        <Card className="p-0 md:p-0">
+          <nav aria-label="Manage" className="divide-y divide-border">
+            {[
+              { href: "/settings/categories", label: "Categories & favorites", icon: Shapes },
+              { href: "/trash", label: "Trash", icon: Trash2 },
+            ].map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex min-h-14 items-center gap-3 px-4 transition-colors duration-120 hover:bg-surface-2 md:px-5"
+              >
+                <Icon className="size-5 text-fg-muted" aria-hidden />
+                <span className="flex-1 font-medium">{label}</span>
+                <ChevronRight className="size-4 text-fg-muted" aria-hidden />
+              </Link>
+            ))}
+          </nav>
         </Card>
 
         <Card>
@@ -58,7 +78,7 @@ export default async function SettingsPage() {
           <CardHeader>
             <CardTitle>Security</CardTitle>
           </CardHeader>
-          <div className="grid gap-6">
+          <div className="grid grid-cols-1 gap-6">
             <ChangePasswordForm />
             <div className="border-t border-border pt-5">
               <RecoveryCodesCard remaining={remainingCodes} username={user.username} />

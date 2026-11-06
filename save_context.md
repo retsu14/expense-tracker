@@ -79,13 +79,25 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - Avatar: client resizes to 256px webp → `createAvatarUploadAction` presigned PUT → browser PUT to R2 → `confirmAvatarAction` (HEAD checks size/type/prefix) → old avatar deleted. **R2 bucket needs a CORS policy allowing PUT from app origins.**
 - Browser-pane testing quirk: requestAnimationFrame stalls in the hidden pane, so Suspense reveals/toasts/animations only show after a screenshot.
 
+## Ledger notes (Phase 3)
+
+- Module `src/modules/ledger`: domain (`account`, `category` + `DEFAULT_CATEGORIES` (PH, `system: "fees"` row), `transaction` (`validateDraft`, `extractTags`), `amount-expression` (`evaluateAmount` safe math → centavos), `transaction-query` (filter, `parseSearch` for text/#tags/>500, period presets, keyset cursor, `parseFilterParams`/`filterToParams` for URL), `settings` (payday schedule), `template`, `ports`), application (`ledger.use-cases.ts`, `schemas.ts`), infrastructure (`ledger.schema.ts`, `drizzle-ledger.repository.ts`), presentation (`actions.ts`). Container: `ledgerDeps()`. Kernel `time.ts` (tz-aware Ymd helpers).
+- Tables: user_settings (timezone, payday jsonb, monthly_income, onboarded_at), accounts (opening_balance; balance computed in SQL), categories, transactions (bigint centavos, linked_id for transfer fee rows, tags text[], idempotency_key unique per user, soft delete, trigram GIN on note), templates. Migration `0001_ledger.sql` (adds pg_trgm) applied.
+- Transfers: one `transfer` row + optional linked `expense` fee row (Fees category). Edit/delete/restore keep the fee row in sync. Fee rows aren't editable directly.
+- Search: ILIKE on note/category/wallet + `word_similarity(q, note) > 0.5` for typos. Amount tokens and #tags parsed server-side. Filters live in the URL.
+- Keyset pagination on (occurred_at, id) desc, 30/page, `loadTransactionsAction`; day totals via separate aggregate (grouped by ordinal `sql\`1\`` because tz is a param). Summary = separate aggregate.
+- (app) layout redirects to `/onboarding` until `onboarded_at` set. Onboarding: wallets + balances, payday (twice/monthly/weekly/varies), optional income; skip = Cash wallet.
+- Quick-add (`components/ledger/quick-add-form.tsx`, opened via `useUiStore.setQuickAddOpen` / `openEditTransaction(id)`, key `N`): amount math + operator buttons, favorites (tap = log instantly), category grid (usage-sorted, note-based suggestion), wallet chips w/ balances, Today/Yesterday/date, note with #tags, save-as-favorite, idempotency key, undo toast, pig munch.
+- Activity: search (`/` focuses), filter sheet, chips, day groups + totals, swipe-left/hover delete with undo, Trash page (`/trash`, 30-day auto purge on visit, restore, empty). Accounts page CRUD + archive. `/settings/categories` categories CRUD/archive + favorites removal.
+- Gotchas fixed: in raw `sql` inside a single-table select Drizzle renders outer columns unqualified → use `sql.raw('"accounts"."id"')`. Proxy refreshes the cookie on GET only (setting it on action POSTs made Next refresh the page). Page-level grids need `grid-cols-1` or wide content overflows on mobile. Lists reset from server props by JSON signature, not identity.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
 - [x] 0 Foundation
 - [x] 1 Pig v1
 - [x] 2 Identity
-- [ ] 3 Onboarding + Ledger
+- [x] 3 Onboarding + Ledger
 - [ ] 4 Plan (budgets, bills, recurring, goals, notifications)
 - [ ] 5 Insights
 - [ ] 6 PWA
@@ -101,3 +113,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 0 done: deps, strict TS, ESLint (strict-type-checked + DDD boundaries), Prettier, Husky/lint-staged/commitlint, CI, Vitest, env schema, Drizzle/Neon client, kernel, tokens/fonts, UI primitives, responsive shell, error/404/loading pages, Docker env_file + healthcheck. Build + checks pass. Committed 0414004.
 - 2026-11-06 — Phase 1 done: interactive SVG pig (6 moods + cover eyes), eye-follow, blink, tap/pet/drag, speech bubble, oink sound + haptics toggles, mood domain rules + tests, Home pig, /dev/pig playground. Vitest uses native tsconfigPaths. Committed 32a79e6.
 - 2026-11-06 — Phase 2 done: username/password auth (argon2id, DB sessions, proxy guard), 8 recovery codes + forgot password, rate limits, settings (profile, pig name, change password, regenerate codes, devices, sign out), avatar upload to R2, user in sidebar/top bar, Home greets by name. 26 tests total. E2E verified on Neon: register, login (wrong + right), sign out, reset with code (reuse rejected), profile save. Avatar browser upload blocked by missing R2 CORS (server-side presigned PUT verified OK); R2_PUBLIC_URL (r2.dev) times out from this network — leave it empty to fall back to signed GET URLs, or attach a custom domain. Test account `piggy_tester` exists in the DB.
+- 2026-11-06 — Phase 3 done: onboarding, wallets, PH categories, transactions (expense/income/transfer + fee), amount math, favorites, quick-add create/edit, Activity with server search/filters/keyset paging/undo, Trash, Accounts, Categories pages, Home totals + recent, N shortcut. 43 tests. E2E verified on Neon (balances, search, filters, paging, undo/trash, transfer fee edit, mobile layout). Test login in git-ignored `test-account.local.md`.
