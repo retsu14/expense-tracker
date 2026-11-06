@@ -58,9 +58,9 @@ function Kpi({
   delta?: React.ReactNode;
 }) {
   return (
-    <Card className="grid gap-1 p-4">
+    <Card className="grid gap-1 p-4 max-xs:p-3">
       <p className="text-caption text-fg-muted">{label}</p>
-      <div className="text-h2 tabular">{children}</div>
+      <div className="text-h3 tabular md:text-h2">{children}</div>
       {delta}
     </Card>
   );

@@ -1,29 +1,46 @@
 "use client";
 
-import { motion, useAnimate, useMotionValue, useReducedMotion, useTransform } from "motion/react";
+import { m, useAnimate, useMotionValue, useReducedMotion, useTransform } from "motion/react";
 import { type KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
+import { HEALTH_LABEL, type Health } from "@/modules/mascot/domain/health";
 import type { Mood } from "@/modules/mascot/domain/mood";
 import { useMascotStore } from "@/stores/mascot-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
 import { playOink } from "./oink-sound";
-import { Brows, Coin, CoverHooves, Eyes, Mouth, Sparkles, Tears, Zzz } from "./pig-parts";
+import {
+  Backdrop,
+  Brows,
+  Coin,
+  CoverHooves,
+  Eyes,
+  Head,
+  Hearts,
+  Hungry,
+  Mouth,
+  Snout,
+  Sparkles,
+  Tears,
+  Zzz,
+} from "./pig-parts";
 import { SpeechBubble } from "./speech-bubble";
 import { useBlink } from "./use-blink";
 import { useEyeFollow } from "./use-eye-follow";
 
-const TAP_LINES = [
-  "Oink!",
-  "Oink oink!",
-  "Hi there!",
-  "Hehe, that tickles",
-  "Got any snacks?",
-  "Saving is my cardio",
-  "Every peso counts!",
-];
+const TAP_LINES: Record<Health, string[]> = {
+  thriving: [
+    "Oink oink! 💗",
+    "I'm so full of savings!",
+    "Best. Budget. Ever.",
+    "Hehe, that tickles",
+  ],
+  healthy: ["Oink!", "Hi there!", "Got any snacks?", "Saving is my cardio", "Every peso counts!"],
+  thin: ["My tummy's rumbling…", "Maybe skip the milk tea?", "A little less spending, please?"],
+  famished: ["So hungry… 🥺", "Can we save a bit today?", "Feed me with savings, please…"],
+};
 
 const MOOD_LABEL: Record<Mood, string> = {
   happy: "happy",
@@ -42,6 +59,7 @@ const pick = <T,>(items: readonly T[]) => items[Math.floor(Math.random() * items
 
 type PigProps = {
   mood?: Mood;
+  health?: Health;
   size?: number;
   coverEyes?: boolean;
   interactive?: boolean;
@@ -52,6 +70,7 @@ type PigProps = {
 
 export function Pig({
   mood: moodProp,
+  health = "healthy",
   size = 160,
   coverEyes = false,
   interactive = true,
@@ -144,7 +163,7 @@ export function Pig({
 
   const tap = () => {
     feedback();
-    say(mood === "sleeping" ? "Zzz... huh? Oh hi!" : (pick(TAP_LINES) ?? "Oink!"));
+    say(mood === "sleeping" ? "Zzz... huh? Oh hi!" : (pick(TAP_LINES[health]) ?? "Oink!"));
     if (!animated) return;
     void animate(scope.current, { y: [0, -16, 0], scaleY: [1, 0.92, 1.05, 1] }, { duration: 0.45 });
     void animate("[data-snout]", { scaleX: [1, 1.18, 0.94, 1] }, { duration: 0.35 });
@@ -209,7 +228,7 @@ export function Pig({
 
   const loop = { repeat: Infinity, ease: "easeInOut" } as const;
   const showSparkles = mood === "celebrating";
-  const label = `${name} the pig is ${MOOD_LABEL[mood]}.${interactive ? " Press to say hi." : ""}`;
+  const label = `${name} the pig is ${MOOD_LABEL[mood]}${health === "healthy" ? "" : ` and ${HEALTH_LABEL[health].toLowerCase()}`}.${interactive ? " Press to say hi." : ""}`;
 
   return (
     <div className={cn("relative inline-flex", className)} style={{ width: size, height: size }}>
@@ -220,7 +239,7 @@ export function Pig({
           setBubble(null);
         }}
       />
-      <motion.div
+      <m.div
         className={cn(
           "size-full touch-manipulation rounded-full outline-offset-4 select-none",
           interactive && "cursor-pointer",
@@ -256,7 +275,7 @@ export function Pig({
           : { role: "img", "aria-label": label })}
       >
         <div ref={scope} className="size-full" style={{ transformOrigin: "50% 100%" }}>
-          <motion.div
+          <m.div
             className="size-full"
             animate={
               animated && mood === "celebrating"
@@ -273,89 +292,45 @@ export function Pig({
               className="size-full overflow-visible text-fg-muted"
               aria-hidden
             >
-              <ellipse cx={100} cy={188} rx={54} ry={7} fill="currentColor" opacity={0.18} />
+              <Backdrop health={health} animated={animated} />
 
-              <motion.path
-                d="M162 124 q16 -3 14 -15 q-2 -9 -10 -5 q-7 5 1 10 q9 4 16 -5"
-                fill="none"
-                stroke="#e8879e"
-                strokeWidth={5}
-                strokeLinecap="round"
-                style={{ originX: 0, originY: 1 }}
-                animate={animated && mood !== "sleeping" ? { rotate: [0, 14, -6, 0] } : {}}
-                transition={{ ...loop, duration: 0.8, repeatDelay: 1.8 }}
-              />
-
-              <rect x={66} y={160} width={24} height={24} rx={10} fill="#e8879e" />
-              <rect x={110} y={160} width={24} height={24} rx={10} fill="#e8879e" />
-
-              <motion.g
+              <m.g
                 style={{ originY: 1 }}
-                animate={animated && mood !== "celebrating" ? { scaleY: [1, 1.025, 1] } : {}}
-                transition={{ ...loop, duration: mood === "sleeping" ? 4.2 : 3.2 }}
+                animate={
+                  animated && mood !== "celebrating"
+                    ? { scaleY: [1, health === "famished" ? 1.012 : 1.025, 1] }
+                    : {}
+                }
+                transition={{
+                  ...loop,
+                  duration: mood === "sleeping" || health === "famished" ? 4.2 : 3.2,
+                }}
               >
-                <g data-ear="left" style={{ transformBox: "fill-box", transformOrigin: "70% 90%" }}>
-                  <path d="M46 66 C36 38 42 22 54 24 C66 26 78 42 80 58 Z" fill="var(--pig)" />
-                  <path d="M53 57 C48 42 50 33 56 34 C62 35 69 45 70 53 Z" fill="#e8879e" />
-                </g>
-                <g
-                  data-ear="right"
-                  style={{ transformBox: "fill-box", transformOrigin: "30% 90%" }}
-                >
-                  <path
-                    d="M154 66 C164 38 158 22 146 24 C134 26 122 42 120 58 Z"
-                    fill="var(--pig)"
-                  />
-                  <path d="M147 57 C152 42 150 33 144 34 C138 35 131 45 130 53 Z" fill="#e8879e" />
-                </g>
-
-                <ellipse cx={100} cy={112} rx={72} ry={65} fill="var(--pig)" />
-                <ellipse
-                  cx={72}
-                  cy={74}
-                  rx={18}
-                  ry={9}
-                  fill="#fff"
-                  opacity={0.28}
-                  transform="rotate(-24 72 74)"
-                />
-
-                <motion.g
-                  fill="#e8879e"
-                  animate={{ opacity: petting ? 0.95 : 0.45 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <ellipse cx={52} cy={120} rx={12} ry={7} />
-                  <ellipse cx={148} cy={120} rx={12} ry={7} />
-                </motion.g>
-
+                <Head health={health} petting={petting} />
                 <Brows mood={mood} />
                 <Eyes
                   mood={mood}
+                  health={health}
                   squint={petting || coverEyes}
                   blinking={blinking}
                   x={eyes.x}
                   y={eyes.y}
                 />
-
-                <g data-snout style={{ transformBox: "fill-box", transformOrigin: "50% 50%" }}>
-                  <ellipse cx={100} cy={124} rx={23} ry={16} fill="#e8879e" />
-                  <ellipse cx={92} cy={124} rx={3.6} ry={5.2} fill="#8a3f52" />
-                  <ellipse cx={108} cy={124} rx={3.6} ry={5.2} fill="#8a3f52" />
-                </g>
-
-                <Mouth mood={mood} />
+                <Snout />
+                <Mouth mood={mood} health={health} />
                 {mood === "sad" && <Tears still={!animated} />}
                 <CoverHooves show={coverEyes} />
-              </motion.g>
+              </m.g>
 
+              {health === "famished" && mood !== "sleeping" && <Hungry still={!animated} />}
+              {health === "thriving" && mood !== "sleeping" && <Hearts still={!animated} />}
               {mood === "sleeping" && <Zzz still={!animated} />}
               {showSparkles && <Sparkles still={!animated} />}
               {mood === "munch" && <Coin still={!animated} />}
             </svg>
-          </motion.div>
+          </m.div>
         </div>
-      </motion.div>
+      </m.div>
     </div>
   );
 }

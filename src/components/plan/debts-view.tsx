@@ -160,11 +160,11 @@ export function DebtsView({
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
         <Card className="p-4">
           <p className="text-caption text-fg-muted">You owe</p>
-          <Amount value={totals.owe} className="text-h2" />
+          <Amount value={totals.owe} className="text-h3 md:text-h2" />
         </Card>
         <Card className="p-4">
           <p className="text-caption text-fg-muted">Owed to you</p>
-          <Amount value={totals.owed} kind="income" className="text-h2" />
+          <Amount value={totals.owed} kind="income" className="text-h3 md:text-h2" />
         </Card>
         <div className="col-span-2 flex flex-wrap items-center gap-2 md:col-span-1 md:justify-end">
           <Button

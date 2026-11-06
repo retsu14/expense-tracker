@@ -1,4 +1,4 @@
-import { CalendarClock, MessageCircleHeart } from "lucide-react";
+import { CalendarClock } from "lucide-react";
 import Link from "next/link";
 
 import { RecentTransactions } from "@/components/activity/recent-transactions";
@@ -6,25 +6,28 @@ import { AddTransactionButton } from "@/components/layout/add-transaction-button
 import { PageHeader } from "@/components/layout/page-header";
 import { Amount } from "@/components/ledger/amount";
 import { CategoryIcon } from "@/components/ledger/category-icon";
-import { HomePig } from "@/components/pig/home-pig";
+import { PigHero } from "@/components/pig/pig-hero";
 import { GoalPig } from "@/components/plan/goal-pig";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { formatPeso } from "@/lib/money";
 import { cn } from "@/lib/utils";
+import { cashflowForecast } from "@/modules/analytics/application/analytics.use-cases";
 import { requireUser } from "@/modules/identity/presentation/dal";
 import {
   listTransactions,
   transactionSummary,
 } from "@/modules/ledger/application/ledger.use-cases";
 import { EMPTY_FILTER } from "@/modules/ledger/domain/transaction-query";
+import { assessHealth } from "@/modules/mascot/domain/health";
+import { listDebts } from "@/modules/planning/application/debts.use-cases";
 import {
   billOccurrences,
   budgetOverview,
   listGoals,
 } from "@/modules/planning/application/planning.use-cases";
-import { ledgerDeps, planningDeps } from "@/shared/container";
+import { analyticsDeps, ledgerDeps, planningDeps } from "@/shared/container";
 import { addDays } from "@/shared/kernel/time";
 
 function SeeAll({ href }: { href: string }) {
@@ -45,12 +48,14 @@ export default async function HomePage() {
   const user = await requireUser();
   const deps = ledgerDeps();
   const plan = planningDeps();
-  const [month, recent, accounts, overview, goals] = await Promise.all([
+  const [month, recent, accounts, overview, goals, forecast, debts] = await Promise.all([
     transactionSummary(deps, user.id, { ...EMPTY_FILTER, period: "month" }),
     listTransactions(deps, user.id, EMPTY_FILTER, null, 5),
     deps.ledger.listAccounts(user.id),
     budgetOverview(plan, user.id),
     listGoals(plan, user.id),
+    cashflowForecast(analyticsDeps(), user.id),
+    listDebts(plan, user.id),
   ]);
   const bills = (
     await billOccurrences(plan, user.id, {
@@ -63,28 +68,37 @@ export default async function HomePage() {
   const topBudgets = overview.items.filter((i) => i.categoryId).slice(0, 3);
   const activeGoals = goals.filter((g) => g.status === "active");
   const safe = overview.safe;
+  const health = assessHealth({
+    hasData: recent.items.length > 0,
+    budgetUsedPct: overview.overall?.pct ?? null,
+    alertPct: overview.alertPct,
+    overBudget: overview.items
+      .filter((i) => i.categoryId && i.status === "over")
+      .map((i) => i.name),
+    earned: month.income,
+    spent: month.expense,
+    balance,
+    forecastLow: forecast.low.balance,
+    overdueBills: bills.filter((b) => b.kind === "expense" && b.status === "overdue").length,
+    overdueDebts: debts.items.filter((d) => d.direction === "i_owe" && d.status === "overdue")
+      .length,
+    owed: debts.totals.owe,
+  });
 
   return (
     <>
       <PageHeader title="Home" description="Your money at a glance." />
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:gap-6">
-        <Card className="flex flex-col items-center justify-center gap-3 overflow-visible lg:col-span-4 lg:col-start-9 lg:row-span-2 lg:row-start-1">
-          <HomePig
-            name={user.displayName}
-            pigName={user.pigName}
-            budgetUsedPct={overview.usedPct}
-            alertPct={overview.alertPct}
-          />
-          <Link
-            href="/assistant"
-            className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border px-4 text-body-sm font-medium transition-colors duration-120 hover:bg-surface-2"
-          >
-            <MessageCircleHeart className="size-4 text-pig" aria-hidden />
-            Ask {user.pigName}
-          </Link>
-        </Card>
+      <div className="grid grid-cols-1 gap-4 lg:grid-flow-row-dense lg:grid-cols-12 lg:gap-6">
+        <PigHero
+          name={user.displayName}
+          pigName={user.pigName}
+          report={health}
+          budgetUsedPct={overview.usedPct}
+          alertPct={overview.alertPct}
+          className="lg:col-span-5 lg:row-span-2"
+        />
 
-        <Card className="lg:col-span-8 lg:row-start-1">
+        <Card className="lg:col-span-7">
           {safe ? (
             <>
               <p className="text-body-sm text-fg-muted">Safe to spend today</p>
@@ -107,7 +121,7 @@ export default async function HomePage() {
               </Link>
             </>
           )}
-          <dl className="mt-4 grid grid-cols-3 gap-3 border-t border-border pt-4">
+          <dl className="mt-4 flex flex-wrap justify-between gap-x-5 gap-y-3 border-t border-border pt-4">
             <div>
               <dt className="text-caption text-fg-muted">{safe ? "Balance" : "Spent"}</dt>
               <dd className="mt-0.5 font-semibold">
@@ -134,7 +148,7 @@ export default async function HomePage() {
         </Card>
 
         {bills.length > 0 && (
-          <Card className="lg:col-span-8">
+          <Card className="lg:col-span-7">
             <CardHeader>
               <CardTitle>Upcoming bills</CardTitle>
               <SeeAll href="/plan/bills" />
@@ -170,7 +184,7 @@ export default async function HomePage() {
         )}
 
         {topBudgets.length > 0 && (
-          <Card className={cn(bills.length ? "lg:col-span-4" : "lg:col-span-8")}>
+          <Card className={cn(bills.length ? "lg:col-span-5" : "lg:col-span-7")}>
             <CardHeader>
               <CardTitle>Budgets</CardTitle>
               <SeeAll href="/plan" />
@@ -202,7 +216,7 @@ export default async function HomePage() {
           </Card>
         )}
 
-        <Card className="lg:col-span-8">
+        <Card className="lg:col-span-7">
           <CardHeader>
             <CardTitle>Recent</CardTitle>
             {recent.items.length > 0 && <SeeAll href="/activity" />}
@@ -220,7 +234,7 @@ export default async function HomePage() {
         </Card>
 
         {activeGoals.length > 0 && (
-          <Card className="lg:col-span-4">
+          <Card className="lg:col-span-5">
             <CardHeader>
               <CardTitle>Goals</CardTitle>
               <SeeAll href="/plan/goals" />

@@ -1,14 +1,20 @@
 "use client";
 
 import { CloudOff } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
 
-import { QuickAddForm, type QuickAddContext } from "@/components/ledger/quick-add-form";
+import type { QuickAddContext } from "@/components/ledger/quick-add-form";
 import { ResponsiveModal } from "@/components/ui/responsive-modal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { quickAddContextAction } from "@/modules/ledger/presentation/actions";
 import { toYmd } from "@/shared/kernel/time";
 import { useUiStore } from "@/stores/ui-store";
+
+const QuickAddForm = dynamic(
+  () => import("@/components/ledger/quick-add-form").then((m) => m.QuickAddForm),
+  { ssr: false, loading: () => <Skeleton className="h-96" /> },
+);
 
 const cacheKey = (userId: string) => `oink-qa-ctx:${userId}`;
 

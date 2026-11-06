@@ -1,7 +1,7 @@
 "use client";
 
 import { ArrowRightLeft, Check, Trash2 } from "lucide-react";
-import { motion, useMotionValue, useTransform } from "motion/react";
+import { m, useMotionValue, useTransform } from "motion/react";
 
 import { Amount } from "@/components/ledger/amount";
 import { CategoryIcon } from "@/components/ledger/category-icon";
@@ -45,14 +45,14 @@ export function TransactionRow({
 
   return (
     <li className="relative overflow-hidden">
-      <motion.div
+      <m.div
         aria-hidden
         style={{ opacity: reveal }}
         className="absolute inset-y-0 right-0 flex w-28 items-center justify-end bg-expense pr-5 text-bg"
       >
         <Trash2 className="size-5" />
-      </motion.div>
-      <motion.div
+      </m.div>
+      <m.div
         drag={selecting ? false : "x"}
         dragDirectionLock
         dragConstraints={{ left: SWIPE_DELETE * 1.4, right: 0 }}
@@ -63,7 +63,7 @@ export function TransactionRow({
           if (info.offset.x < SWIPE_DELETE) onDelete();
         }}
         className={cn(
-          "group relative flex items-center gap-3 bg-surface px-4 py-3",
+          "group relative flex items-center gap-3 bg-surface px-4 py-3 max-xs:gap-2 max-xs:px-3",
           selected && "bg-surface-2",
         )}
       >
@@ -72,7 +72,7 @@ export function TransactionRow({
           onClick={selecting ? onToggle : onOpen}
           disabled={selecting && !selectable}
           aria-pressed={selecting ? selected : undefined}
-          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-md text-left disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 rounded-md text-left disabled:cursor-not-allowed disabled:opacity-50 max-xs:gap-2.5"
         >
           {selecting && (
             <span
@@ -86,14 +86,20 @@ export function TransactionRow({
             </span>
           )}
           {tx.kind === "transfer" ? (
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-fg-muted">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-surface-2 text-fg-muted max-xs:size-9">
               <ArrowRightLeft className="size-5" aria-hidden />
             </span>
           ) : (
-            <CategoryIcon icon={tx.categoryIcon} color={tx.categoryColor} />
+            <CategoryIcon
+              icon={tx.categoryIcon}
+              color={tx.categoryColor}
+              className="max-xs:size-9 max-xs:[&_svg]:size-4"
+            />
           )}
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-medium">{transactionTitle(tx)}</span>
+            <span className="block truncate font-medium max-xs:text-body-sm">
+              {transactionTitle(tx)}
+            </span>
             <span className="block truncate text-caption font-normal text-fg-muted">
               {subtitle} · {time}
             </span>
@@ -102,7 +108,7 @@ export function TransactionRow({
             value={tx.amount}
             kind={tx.kind}
             sign={tx.kind !== "transfer"}
-            className="font-semibold"
+            className="shrink-0 font-semibold max-xs:text-body-sm"
           />
         </button>
         {!selecting && (
@@ -115,7 +121,7 @@ export function TransactionRow({
             <Trash2 className="size-4" aria-hidden />
           </button>
         )}
-      </motion.div>
+      </m.div>
     </li>
   );
 }

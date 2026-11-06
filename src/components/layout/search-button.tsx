@@ -10,7 +10,7 @@ export function SearchButton({ compact, className }: { compact?: boolean; classN
   return (
     <button
       type="button"
-      aria-label="Search and commands"
+      aria-label={compact ? "Search and commands" : undefined}
       aria-keyshortcuts="Control+K Meta+K"
       onClick={() => {
         setCommandOpen(true);
@@ -26,7 +26,9 @@ export function SearchButton({ compact, className }: { compact?: boolean; classN
       {!compact && (
         <>
           <span className="flex-1 text-left">Search</span>
-          <kbd className="rounded border border-border px-1.5 text-caption">Ctrl K</kbd>
+          <kbd aria-hidden className="rounded border border-border px-1.5 text-caption">
+            Ctrl K
+          </kbd>
         </>
       )}
     </button>

@@ -49,19 +49,19 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
             <Button asChild variant="ghost" size="sm">
               <Link href="/activity/calendar">
                 <CalendarDays aria-hidden />
-                Calendar
+                <span className="max-xs:sr-only">Calendar</span>
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/import">
                 <Upload aria-hidden />
-                Import
+                <span className="max-xs:sr-only">Import</span>
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/trash">
                 <Trash2 aria-hidden />
-                Trash
+                <span className="max-xs:sr-only">Trash</span>
               </Link>
             </Button>
           </>

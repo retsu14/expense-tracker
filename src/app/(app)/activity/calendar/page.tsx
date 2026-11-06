@@ -14,6 +14,11 @@ import { addDays } from "@/shared/kernel/time";
 
 export const metadata: Metadata = { title: "Calendar" };
 
+const dayLabel = (ymd: string) =>
+  new Intl.DateTimeFormat("en-PH", { month: "long", day: "numeric", timeZone: "UTC" }).format(
+    new Date(`${ymd}T12:00:00Z`),
+  );
+
 const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default async function CalendarPage({ searchParams }: PageProps<"/activity/calendar">) {
@@ -64,14 +69,17 @@ export default async function CalendarPage({ searchParams }: PageProps<"/activit
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1 text-center text-caption text-fg-muted" aria-hidden>
+      <div
+        className="grid grid-cols-7 gap-0.5 text-center text-caption text-fg-muted xs:gap-1"
+        aria-hidden
+      >
         {WEEKDAYS.map((d) => (
           <span key={d} className="py-1">
             {d}
           </span>
         ))}
       </div>
-      <ol className="grid grid-cols-7 gap-1">
+      <ol className="grid grid-cols-7 gap-0.5 xs:gap-1">
         {Array.from({ length: lead }, (_, i) => (
           <li key={`pad-${i}`} aria-hidden />
         ))}
@@ -79,18 +87,21 @@ export default async function CalendarPage({ searchParams }: PageProps<"/activit
           const v = byDay.get(d);
           const future = d > cal.today;
           return (
-            <li key={d}>
+            <li key={d} className="min-w-0">
               <Link
                 href={`/activity?period=custom&from=${d}&to=${d}`}
-                aria-label={`${d}: spent ${formatPeso(v?.expense ?? 0)}, earned ${formatPeso(v?.income ?? 0)}`}
                 className={cn(
-                  "flex aspect-square min-h-14 flex-col rounded-md border p-1 text-left transition-colors duration-120 hover:border-fg-muted sm:aspect-auto sm:min-h-24 sm:p-2",
+                  "flex aspect-[4/5] min-w-0 flex-col overflow-hidden rounded-md border p-0.5 text-left transition-colors duration-120 hover:border-fg-muted xs:aspect-square xs:p-1 sm:aspect-auto sm:min-h-24 sm:p-2",
                   d === cal.today ? "border-accent" : "border-border",
-                  future ? "bg-bg opacity-50" : "bg-surface",
+                  future ? "border-dashed bg-bg text-fg-muted" : "bg-surface",
                 )}
               >
                 <span className="text-caption font-semibold">{Number(d.slice(8))}</span>
-                <span className="mt-auto grid text-[10px] leading-tight sm:text-caption">
+                <span className="sr-only">
+                  {dayLabel(d)}: spent {formatPeso(v?.expense ?? 0)}, earned{" "}
+                  {formatPeso(v?.income ?? 0)}
+                </span>
+                <span className="mt-auto grid text-[9px] leading-tight xs:text-[10px] sm:text-caption">
                   {v && v.expense > 0 && <Amount value={v.expense} compact className="truncate" />}
                   {v && v.income > 0 && (
                     <Amount value={v.income} kind="income" compact className="truncate" />

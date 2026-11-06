@@ -8,17 +8,30 @@ import { Pig } from "@/components/pig/pig";
 import { Button } from "@/components/ui/button";
 import { useMounted } from "@/lib/use-mounted";
 import type { monthlyRecap } from "@/modules/analytics/application/analytics.use-cases";
+import type { Health } from "@/modules/mascot/domain/health";
 import type { Mood } from "@/modules/mascot/domain/mood";
 
 import { useMoneyFormat } from "./use-money-format";
 
 type Recap = Awaited<ReturnType<typeof monthlyRecap>>;
 
-const VERDICT: Record<Recap["verdict"], { mood: Mood; line: string }> = {
-  great: { mood: "celebrating", line: "Ang galing! You spent less and saved more. 🎉" },
-  good: { mood: "happy", line: "Solid month. Keep the streak going!" },
-  over: { mood: "sad", line: "You spent more than you earned. Let's plan next month together." },
-  quiet: { mood: "sleeping", line: "Nothing logged this month. Wake me up next time! 💤" },
+const VERDICT: Record<Recap["verdict"], { mood: Mood; health: Health; line: string }> = {
+  great: {
+    mood: "celebrating",
+    health: "thriving",
+    line: "ang galing! You spent less and saved more. 🎉",
+  },
+  good: { mood: "happy", health: "healthy", line: "solid month! Keep the streak going." },
+  over: {
+    mood: "sad",
+    health: "thin",
+    line: "you spent more than you earned. Let's plan next month together.",
+  },
+  quiet: {
+    mood: "sleeping",
+    health: "healthy",
+    line: "nothing was logged this month. Wake me up next time! 💤",
+  },
 };
 
 const dayLabel = (ymd: string) =>
@@ -87,7 +100,9 @@ export function RecapCard({
         <h1 className="font-brand text-h1">{monthName}</h1>
       </header>
       <div className="flex h-36 justify-center pt-4">
-        {mounted && <Pig mood={v.mood} size={120} interactive={false} name={pigName} />}
+        {mounted && (
+          <Pig mood={v.mood} health={v.health} size={120} interactive={false} name={pigName} />
+        )}
       </div>
       <p className="text-body">
         {name}, {v.line}

@@ -1,3 +1,5 @@
+import type { Health } from "./health";
+
 export const MOODS = ["happy", "worried", "sad", "celebrating", "sleeping", "munch"] as const;
 
 export type Mood = (typeof MOODS)[number];
@@ -9,6 +11,7 @@ export type MoodSignals = {
   justSaved?: boolean;
   milestoneReached?: boolean;
   idleMinutes?: number;
+  health?: Health;
 };
 
 const NIGHT_START = 23;
@@ -24,7 +27,9 @@ export function deriveMood(signals: MoodSignals): Mood {
 
   if (signals.milestoneReached) return "celebrating";
   if (signals.justSaved) return "munch";
+  if (signals.health === "famished") return "sad";
   if (budgetUsedPct !== null && budgetUsedPct > 100) return "sad";
+  if (signals.health === "thin") return "worried";
   if (budgetUsedPct !== null && budgetUsedPct >= alertPct) return "worried";
   if (isNight(hour) || idleMinutes >= IDLE_SLEEP_MINUTES) return "sleeping";
   return "happy";
