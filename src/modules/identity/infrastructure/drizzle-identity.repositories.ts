@@ -89,6 +89,9 @@ export function drizzleUserRepository(db: Db): UserRepository {
     async updateAvatar(id, avatarKey) {
       await db.update(users).set({ avatarKey }).where(eq(users.id, id));
     },
+    async delete(id) {
+      await db.delete(users).where(eq(users.id, id));
+    },
   };
 }
 

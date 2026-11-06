@@ -51,6 +51,11 @@ export const confirmPasswordSchema = z.object({
   password: password.min(1, "Enter your password."),
 });
 
+export const deleteAccountSchema = z.object({
+  password: password.min(1, "Enter your password."),
+  confirmUsername: text(40).min(1, "Type your username to confirm."),
+});
+
 export const profileSchema = z.object({
   displayName: text(80),
   pigName: text(40),

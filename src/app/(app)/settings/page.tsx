@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
+import { DataSettings } from "@/components/settings/data-settings";
 import { MascotSettings } from "@/components/settings/mascot-settings";
 import { ProfileForm } from "@/components/settings/profile-form";
 import { RecoveryCodesCard } from "@/components/settings/recovery-codes-card";
@@ -91,6 +92,13 @@ export default async function SettingsPage() {
             <CardTitle>Devices</CardTitle>
           </CardHeader>
           <SessionsList sessions={sessions} />
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Your data</CardTitle>
+          </CardHeader>
+          <DataSettings username={user.username} />
         </Card>
 
         <form action={logoutAction}>

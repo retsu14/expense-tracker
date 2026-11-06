@@ -65,6 +65,10 @@ export function createInMemoryDeps(start = new Date("2026-01-01T00:00:00Z")) {
         users.set(id, next);
         return Promise.resolve(next);
       },
+      delete: (id) => {
+        users.delete(id);
+        return Promise.resolve();
+      },
       updateAvatar: (id, avatarKey) => {
         const u = users.get(id);
         if (u) users.set(id, { ...u, avatarKey });

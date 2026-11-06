@@ -11,6 +11,7 @@ export type UserRepository = {
   updatePassword(id: string, passwordHash: string): Promise<void>;
   updateProfile(id: string, patch: { displayName?: string; pigName?: string }): Promise<User>;
   updateAvatar(id: string, avatarKey: string | null): Promise<void>;
+  delete(id: string): Promise<void>;
 };
 
 export type SessionRepository = {

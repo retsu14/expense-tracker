@@ -10,7 +10,9 @@ import { cn } from "@/lib/utils";
 import { useUiStore } from "@/stores/ui-store";
 
 import type { ShellUser } from "./app-shell";
+import { HideAmountsToggle } from "./hide-amounts-toggle";
 import { NotificationBell } from "./notification-bell";
+import { SearchButton } from "./search-button";
 import { isActive, type NavItem, primaryNav, secondaryNav } from "./nav-items";
 import { Wordmark } from "./wordmark";
 
@@ -40,10 +42,14 @@ export function Sidebar({ user, unread }: { user: ShellUser; unread: number }) {
     <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col border-r border-border bg-surface px-4 py-6 lg:flex">
       <div className="flex items-center justify-between">
         <Wordmark className="px-2" />
-        <NotificationBell unread={unread} />
+        <div className="flex">
+          <HideAmountsToggle />
+          <NotificationBell unread={unread} />
+        </div>
       </div>
+      <SearchButton className="mt-4" />
       <Button
-        className="mt-6 w-full"
+        className="mt-3 w-full"
         onClick={() => {
           setQuickAddOpen(true);
         }}

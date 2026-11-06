@@ -2,7 +2,12 @@ import { describe, expect, it } from "vitest";
 
 import { SESSION_TTL_MS } from "@/modules/identity/domain/session";
 
-import { changePassword, confirmAvatar, createAvatarUpload } from "./account.use-cases";
+import {
+  changePassword,
+  confirmAvatar,
+  createAvatarUpload,
+  deleteAccount,
+} from "./account.use-cases";
 import {
   login,
   logout,
@@ -156,5 +161,27 @@ describe("account", () => {
 
     const foreign = await confirmAvatar(deps, userId, { key: "avatars/someone-else/x.webp" });
     expect(foreign.ok).toBe(false);
+  });
+});
+
+describe("deleteAccount", () => {
+  it("requires the matching username and password", async () => {
+    const { deps, users } = await setup();
+    const userId = [...users.keys()][0] ?? "";
+    const wrongName = await deleteAccount(deps, userId, {
+      password: creds.password,
+      confirmUsername: "nope",
+    });
+    expect(!wrongName.ok && wrongName.error.code).toBe("confirm_mismatch");
+    const wrongPass = await deleteAccount(deps, userId, {
+      password: "bad-pass-1",
+      confirmUsername: "JUAN_DC",
+    });
+    expect(wrongPass.ok).toBe(false);
+    expect(
+      (await deleteAccount(deps, userId, { password: creds.password, confirmUsername: "JUAN_DC" }))
+        .ok,
+    ).toBe(true);
+    expect(users.size).toBe(0);
   });
 });

@@ -100,6 +100,14 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - UI: `/plan` (budgets + safe-to-spend + suggestions), `/plan/bills`, `/plan/goals` (GoalPig fills up), `/notifications` (auto mark read + button), bell in sidebar/rail/top bar. Home: safe-to-spend, upcoming bills, top budgets, goals, pig mood from budgets (any category over → at least worried).
 - Testing quirk: when the browser pane is hidden, `window.$RV(window.$RB)` flushes React streaming reveals.
 
+## Insights notes (Phase 5)
+
+- Module `src/modules/analytics` (read side): domain `insights.ts` (presets month/last-month/3m/year with previous range, `kpis` incl. savings rate + pace forecast + % deltas, `forecastCashflow` 30-day projection, `heatLevel`), repo `drizzle-analytics.repository.ts` (totals, byCategory, monthly, daily, weekday, biggest, topTags, exportRows), use cases `insights`, `cashflowForecast` (avg daily spend excludes paid recurring), `exportTransactions`. Container `analyticsDeps()`.
+- `/insights?p=…`: KPI tiles, "Where it went" ranked single-hue bars (no donut: 16 categories can't be told apart by color), daily calendar heat map, income vs spending 12-month bars, cash-flow forecast area, weekday bars, budget vs actual, biggest expenses, top tags. Every chart card has a Chart/Table toggle (needed because light-mode series colors are under 3:1).
+- Chart colors are validated (dataviz validator): `--series-income`/`--series-expense` (aqua/orange, stepped per theme), `--series-1` blue, `--heat-1..5` blue ramp (dark ramp reversed so low values recede). Category pastel colors fail the validator — use them only for icons, never as chart series.
+- Exports: `/api/export/transactions?from&to` (CSV, BOM, formula-injection safe, amounts numeric), `/api/export/backup` (JSON, centavos, no ids/hashes). Settings → Your data: exports + delete account (password + type username; cascades; R2 avatar removed) → `/register?deleted=1`.
+- Hide amounts: eye toggle (sidebar/top bar), `html.amounts-hidden` blurs `.tabular` (opt out with `.no-blur`) and `<Amount>` shows ₱•••. Command palette Ctrl/⌘K (`command-palette.tsx`): actions, pages, live transaction search; search button in sidebar/top bar.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -108,7 +116,7 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - [x] 2 Identity
 - [x] 3 Onboarding + Ledger
 - [x] 4 Plan (budgets, bills, recurring, goals, notifications)
-- [ ] 5 Insights
+- [x] 5 Insights
 - [ ] 6 PWA
 - [ ] 7 P1 pack
 - [ ] 8 Local AI
@@ -124,3 +132,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 2 done: username/password auth (argon2id, DB sessions, proxy guard), 8 recovery codes + forgot password, rate limits, settings (profile, pig name, change password, regenerate codes, devices, sign out), avatar upload to R2, user in sidebar/top bar, Home greets by name. 26 tests total. E2E verified on Neon: register, login (wrong + right), sign out, reset with code (reuse rejected), profile save. Avatar browser upload blocked by missing R2 CORS (server-side presigned PUT verified OK); R2_PUBLIC_URL (r2.dev) times out from this network — leave it empty to fall back to signed GET URLs, or attach a custom domain. Test account `piggy_tester` exists in the DB.
 - 2026-11-06 — Phase 3 done: onboarding, wallets, PH categories, transactions (expense/income/transfer + fee), amount math, favorites, quick-add create/edit, Activity with server search/filters/keyset paging/undo, Trash, Accounts, Categories pages, Home totals + recent, N shortcut. 43 tests. E2E verified on Neon (balances, search, filters, paging, undo/trash, transfer fee edit, mobile layout). Test login in git-ignored `test-account.local.md`.
 - 2026-11-06 — Phase 3 committed c030bb7. Phase 4 done: budgets (monthly/pay cycle, rollover, alerts, suggestions, safe-to-spend), bills & recurring (mark paid/skip, auto-post, reminders), goals (contributions, auto-complete), notification center + bell, budget alert toasts, Home planning widgets, pig mood from budgets. 51 tests. E2E verified on Neon.
+- 2026-11-06 — Phase 4 committed 84ef6ff. Phase 5 done: Insights page with validated charts + table views, cash-flow forecast, CSV/JSON export, delete account, hide amounts, Ctrl/⌘K command palette. 59 tests. E2E verified on Neon (numbers, exports, palette, hide, delete cascade).

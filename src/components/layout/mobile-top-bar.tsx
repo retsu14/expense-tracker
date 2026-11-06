@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { Avatar } from "@/components/ui/avatar";
 
+import { HideAmountsToggle } from "./hide-amounts-toggle";
 import { NotificationBell } from "./notification-bell";
+import { SearchButton } from "./search-button";
 
 import type { ShellUser } from "./app-shell";
 
@@ -14,6 +16,8 @@ export function MobileTopBar({ user, unread }: { user: ShellUser; unread: number
       <div className="flex h-14 items-center justify-between px-4">
         <Wordmark />
         <div className="flex items-center gap-1">
+          <SearchButton compact />
+          <HideAmountsToggle />
           <NotificationBell unread={unread} />
           <Link
             href="/settings"

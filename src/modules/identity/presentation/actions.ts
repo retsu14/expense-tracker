@@ -8,6 +8,7 @@ import {
   changePassword,
   confirmAvatar,
   createAvatarUpload,
+  deleteAccount,
   listSessions,
   regenerateRecoveryCodes,
   removeAvatar,
@@ -163,4 +164,16 @@ export async function removeAvatarAction(): Promise<ActionResult> {
     refresh();
     return ok(undefined);
   });
+}
+
+export async function deleteAccountAction(_prev: unknown, form: FormData): Promise<ActionResult> {
+  const result = await runAction(async () => {
+    const user = await requireUser();
+    return deleteAccount(identityDeps(), user.id, formToObject(form));
+  });
+  if (result.ok) {
+    (await cookies()).delete(SESSION_COOKIE);
+    redirect("/register?deleted=1");
+  }
+  return result;
 }

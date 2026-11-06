@@ -17,6 +17,7 @@ import {
   avatarUploadSchema,
   changePasswordSchema,
   confirmPasswordSchema,
+  deleteAccountSchema,
   profileSchema,
 } from "./schemas";
 
@@ -171,4 +172,28 @@ export async function removeAvatar(deps: IdentityDeps, userId: string) {
   if (!user?.avatarKey) return;
   await deps.users.updateAvatar(userId, null);
   await deps.storage.delete(user.avatarKey).catch(() => undefined);
+}
+
+export async function deleteAccount(
+  deps: IdentityDeps,
+  userId: string,
+  input: unknown,
+): Promise<Result<void>> {
+  const parsed = parse(deleteAccountSchema, input);
+  if (!parsed.ok) return parsed;
+  const user = await deps.users.findById(userId);
+  if (!user) return notFound();
+  if (parsed.value.confirmUsername.trim().toLowerCase() !== user.username) {
+    return err(
+      new DomainError("confirm_mismatch", "Username doesn't match.", {
+        confirmUsername: ["Username doesn't match."],
+      }),
+    );
+  }
+  if (!(await deps.hasher.verify(user.passwordHash, parsed.value.password))) {
+    return wrongPassword("password");
+  }
+  if (user.avatarKey) await deps.storage.delete(user.avatarKey).catch(() => undefined);
+  await deps.users.delete(userId);
+  return ok(undefined);
 }

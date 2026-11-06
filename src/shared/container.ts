@@ -1,5 +1,7 @@
 import "server-only";
 
+import type { AnalyticsDeps } from "@/modules/analytics/application/analytics.use-cases";
+import { drizzleAnalyticsRepository } from "@/modules/analytics/infrastructure/drizzle-analytics.repository";
 import type { IdentityDeps } from "@/modules/identity/application/deps";
 import type { LedgerDeps } from "@/modules/ledger/application/deps";
 import type { PlanningDeps } from "@/modules/planning/application/planning.use-cases";
@@ -48,4 +50,11 @@ let planning: PlanningDeps | undefined;
 export function planningDeps(): PlanningDeps {
   planning ??= { planning: drizzlePlanningRepository(db()), ledger: ledgerDeps() };
   return planning;
+}
+
+let analytics: AnalyticsDeps | undefined;
+
+export function analyticsDeps(): AnalyticsDeps {
+  analytics ??= { analytics: drizzleAnalyticsRepository(db()), planning: planningDeps() };
+  return analytics;
 }

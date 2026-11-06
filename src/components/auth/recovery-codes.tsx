@@ -35,7 +35,7 @@ export function RecoveryCodesList({ codes, username }: { codes: string[]; userna
 
   return (
     <div className="grid gap-3">
-      <ol className="grid grid-cols-2 gap-2 rounded-md border border-border bg-bg p-3 font-mono text-body-sm tabular">
+      <ol className="no-blur grid grid-cols-2 gap-2 rounded-md border border-border bg-bg p-3 font-mono text-body-sm tabular">
         {codes.map((code) => (
           <li key={code} className="rounded-sm bg-surface-2 px-2 py-1.5 text-center tracking-wider">
             {code}
