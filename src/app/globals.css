@@ -194,6 +194,17 @@
   color: var(--color-fg-muted);
 }
 
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@utility fade-x {
+  mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+}
+
 @utility pb-safe {
   padding-bottom: env(safe-area-inset-bottom);
 }

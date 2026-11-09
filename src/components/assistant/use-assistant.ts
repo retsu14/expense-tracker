@@ -12,7 +12,7 @@ import {
   webllmProvider,
 } from "@/modules/assistant/infrastructure/webllm";
 import { useMounted } from "@/lib/use-mounted";
-import { useAssistantStore } from "@/stores/assistant-store";
+import { useAiLoading, useAssistantStore } from "@/stores/assistant-store";
 
 export function useAssistant() {
   const mounted = useMounted();
@@ -21,8 +21,8 @@ export function useAssistant() {
   const webllmModel = useAssistantStore((s) => s.webllmModel);
   const ollamaUrl = useAssistantStore((s) => s.ollamaUrl);
   const ollamaModel = useAssistantStore((s) => s.ollamaModel);
-  const loading = useAssistantStore((s) => s.loading);
-  const setLoading = useAssistantStore((s) => s.setLoading);
+  const loading = useAiLoading((s) => s.loading);
+  const setLoading = useAiLoading((s) => s.setLoading);
 
   const model = kind === "webllm" ? webllmModel : ollamaModel;
   const known = kind === "ollama" || findWebllm(model) !== undefined;

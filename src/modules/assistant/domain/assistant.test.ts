@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { parseEntry, type EntryContext } from "./entry-parser";
 import { normalizeOllamaUrl } from "./models";
-import { mergeDrafts, parseAiEntry, renderMarkdownLite, splitBold } from "./prompts";
+import { chatWindow, mergeDrafts, parseAiEntry, renderMarkdownLite, splitBold } from "./prompts";
 import { ruleTips, type AssistantSnapshot } from "./snapshot";
 
 const ctx: EntryContext = {
@@ -219,5 +219,16 @@ describe("model catalog", () => {
       expect(m.label).toMatch(/^(Tiny|Fast|Balanced|Smart) · /);
     expect(ollamaLabel("qwen2.5:3b")).toBe("Balanced · 3B");
     expect(friendlyProgress("Fetching param cache[1/7]", 0.42)).toBe("Downloading… 42%");
+  });
+});
+
+describe("chat window", () => {
+  it("grows then jumps so earlier turns stay a prefix", () => {
+    const h = (n: number) => Array.from({ length: n }, (_, i) => i);
+    expect(chatWindow(h(6))).toEqual(h(6));
+    expect(chatWindow(h(8))).toEqual([6, 7]);
+    expect(chatWindow(h(10))).toEqual([6, 7, 8, 9]);
+    expect(chatWindow(h(12))).toEqual([6, 7, 8, 9, 10, 11]);
+    expect(chatWindow(h(14))).toEqual([12, 13]);
   });
 });
