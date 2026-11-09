@@ -114,6 +114,15 @@ test.describe("signed in", () => {
     await expect(page.getByRole("meter", { name: /health/ })).toBeVisible();
   });
 
+  test("account menu reaches Accounts on phones", async ({ page }, info) => {
+    test.skip(info.project.name !== "mobile-320", "phone-only menu");
+    await page.getByRole("button", { name: "Account menu" }).click();
+    const sheet = page.getByRole("dialog");
+    await sheet.getByRole("link", { name: "Accounts & wallets" }).click();
+    await expect(page.getByRole("heading", { name: "Accounts", exact: true })).toBeVisible();
+    await expect(page.getByRole("dialog")).toBeHidden();
+  });
+
   test("search and export", async ({ page }) => {
     await page.goto("/activity?q=jollibee");
     await expect(page.getByText("Jollibee lunch").first()).toBeVisible();

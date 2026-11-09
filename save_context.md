@@ -147,6 +147,13 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - E2E: Playwright 1.64.1 + axe 4.14.0 (system Chrome via `channel`), `e2e/core.spec.ts`: register→onboard→type-it entry→budget→pig health→search→CSV export, axe (wcag2/21 A+AA serious/critical) + no-sideways-scroll on 7 signed-in + 3 signed-out pages, desktop + 320px. Session saved to `e2e/.auth` (git-ignored), global teardown deletes the e2e users. Run: `npx next build && npx next start -p 3100` then `E2E_BASE_URL=http://localhost:3100 npm run e2e`.
 - Vercel: build failed with ENOENT `.next/next-server.js.nft.json` in the standalone copy step. `output: "standalone"` now only when `VERCEL` is unset (Docker prod still standalone). Not reproducible locally; confirm on next Vercel deploy.
 
+## Post-launch fixes (2026-11-09)
+
+- Avatars no longer touch R2 from the browser: `uploadAvatarAction` (FormData) → `uploadAvatar` sniffs magic bytes (`identity/domain/image.ts`), ≤ 2 MB, `storage.put` server-side; images served by `GET /api/avatar/[file]` (session-scoped to `avatars/<userId>/`, private immutable cache). Presigned PUT, `head`, `createUploadUrl` and the presigner dep removed; `R2_PUBLIC_URL` no longer used. `serverActions.bodySizeLimit` 2.1mb.
+- Pig speech: `onSay` prop on Pig; `useSpeech` + `SpeechSlot` (tail top/left/auto) + `PigWithBubble` used on Home hero, Ask, auth, onboarding — no more floating bubble overlapping/clipping.
+- Home hero redesign: container-query side-by-side (pig + health label/score/meter + talking bubble) from 256px card width, reason pills, halo glow. Safe-to-spend card: budget `Ring` (`components/ui/ring.tsx`), left/payday chips, Balance links to /accounts.
+- Mobile: avatar opens `MobileAccountMenu` sheet (Accounts, Ask Oink, Categories, Import, Trash, Settings, Sign out). E2E covers it.
+
 ## Progress
 
 - [x] Plan v3 (`PLAN.md`)
@@ -176,3 +183,4 @@ TS strict+, ESLint boundaries (DDD layers), Prettier, Husky/lint-staged/commitli
 - 2026-11-06 — Phase 6 committed 482172a. Phase 7 done: debts/utang, split transactions, bulk actions, saved views, calendar, CSV import, monthly recap, PIN app lock. 67 tests. E2E verified on Neon. Receipts + push deferred. Not committed yet.
 - 2026-11-06 — Phase 7 committed 7ab5fec. Phase 8 done: optional local AI (WebLLM + Ollama), chat, insights check-in, natural-language quick entry, rule tips. 80 tests. Verified WebLLM (SmolLM2 f32) + Ollama (qwen2.5:0.5b, CPU fallback) end to end; test models removed. Not committed yet.
 - 2026-11-06 — Phase 8 committed f9de380. Phase 9 done: pig v2 with financial health states + Home hero, 320px fixes, CSP/HSTS/COOP, lazy loading, Playwright+axe e2e (28 pass on prod build, desktop + 320px), Neon pool crash fix, Vercel standalone fix. 88 unit tests. Committed.
+- 2026-11-09 — Avatar upload/serve via app (no R2 CORS), inline pig speech bubble, Home hero + safe-to-spend redesign, mobile account menu. 90 unit + 29 e2e pass. Committed.

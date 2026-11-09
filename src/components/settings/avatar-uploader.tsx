@@ -6,11 +6,7 @@ import { toast } from "sonner";
 
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-  confirmAvatarAction,
-  createAvatarUploadAction,
-  removeAvatarAction,
-} from "@/modules/identity/presentation/actions";
+import { removeAvatarAction, uploadAvatarAction } from "@/modules/identity/presentation/actions";
 
 const SIZE = 256;
 
@@ -56,18 +52,10 @@ export function AvatarUploader({ name, src }: { name: string; src: string | null
     try {
       const blob = await resize(file);
       setPreview(URL.createObjectURL(blob));
-      const signed = await createAvatarUploadAction({ contentType: blob.type, size: blob.size });
-      if (!signed.ok) throw new Error(signed.error.message);
-
-      const res = await fetch(signed.data.url, {
-        method: "PUT",
-        body: blob,
-        headers: signed.data.headers,
-      });
-      if (!res.ok) throw new Error("Upload failed. Check your connection and try again.");
-
-      const confirmed = await confirmAvatarAction(signed.data.key);
-      if (!confirmed.ok) throw new Error(confirmed.error.message);
+      const form = new FormData();
+      form.set("file", blob, "avatar.webp");
+      const res = await uploadAvatarAction(form);
+      if (!res.ok) throw new Error(res.error.message);
       toast.success("Looking good! Avatar updated.");
     } catch (e) {
       setPreview(null);

@@ -1,8 +1,5 @@
-import Link from "next/link";
-
-import { Avatar } from "@/components/ui/avatar";
-
 import { HideAmountsToggle } from "./hide-amounts-toggle";
+import { MobileAccountMenu } from "./mobile-account-menu";
 import { NotificationBell } from "./notification-bell";
 import { SearchButton } from "./search-button";
 
@@ -19,13 +16,7 @@ export function MobileTopBar({ user, unread }: { user: ShellUser; unread: number
           <SearchButton compact />
           <HideAmountsToggle />
           <NotificationBell unread={unread} />
-          <Link
-            href="/settings"
-            aria-label="Profile and settings"
-            className="flex size-11 items-center justify-center rounded-full"
-          >
-            <Avatar name={user.displayName} src={user.avatarUrl} size={34} />
-          </Link>
+          <MobileAccountMenu user={user} />
         </div>
       </div>
     </header>

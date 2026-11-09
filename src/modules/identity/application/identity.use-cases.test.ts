@@ -2,12 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { SESSION_TTL_MS } from "@/modules/identity/domain/session";
 
-import {
-  changePassword,
-  confirmAvatar,
-  createAvatarUpload,
-  deleteAccount,
-} from "./account.use-cases";
+import { changePassword, readAvatar, uploadAvatar, deleteAccount } from "./account.use-cases";
 import {
   login,
   logout,
@@ -146,21 +141,36 @@ describe("account", () => {
     expect([...sessions.keys()]).toEqual([reg.sessionId]);
   });
 
-  it("only confirms avatars uploaded under the user's own prefix", async () => {
+  it("uploads real images and serves only the user's own avatar", async () => {
     const { deps, users, objects } = await setup();
     const userId = [...users.keys()][0] ?? "";
-    const upload = await createAvatarUpload(deps, userId, {
-      contentType: "image/webp",
-      size: 5000,
-    });
-    if (!upload.ok) throw upload.error;
+    const webp = new Uint8Array([0x52, 0x49, 0x46, 0x46, 1, 0, 0, 0, 0x57, 0x45, 0x42, 0x50, 0]);
 
-    objects.set(upload.value.key, { size: 5000, contentType: "image/webp" });
-    expect((await confirmAvatar(deps, userId, { key: upload.value.key })).ok).toBe(true);
-    expect(users.get(userId)?.avatarKey).toBe(upload.value.key);
+    const res = await uploadAvatar(deps, userId, webp);
+    if (!res.ok) throw res.error;
+    const key = users.get(userId)?.avatarKey ?? "";
+    expect(key.startsWith(`avatars/${userId}/`)).toBe(true);
+    expect(objects.get(key)?.contentType).toBe("image/webp");
 
-    const foreign = await confirmAvatar(deps, userId, { key: "avatars/someone-else/x.webp" });
-    expect(foreign.ok).toBe(false);
+    const file = key.split("/").pop() ?? "";
+    expect((await readAvatar(deps, userId, file))?.contentType).toBe("image/webp");
+    expect(await readAvatar(deps, "someone-else", file)).toBeNull();
+    expect(await readAvatar(deps, userId, "../secret.webp")).toBeNull();
+
+    const again = await uploadAvatar(deps, userId, webp);
+    expect(again.ok).toBe(true);
+    expect(objects.has(key)).toBe(false);
+  });
+
+  it("rejects files that are not images or are too big", async () => {
+    const { deps, users } = await setup();
+    const userId = [...users.keys()][0] ?? "";
+    const fake = new TextEncoder().encode("<svg onload=alert(1)>");
+    expect((await uploadAvatar(deps, userId, fake)).ok).toBe(false);
+    expect((await uploadAvatar(deps, userId, new Uint8Array())).ok).toBe(false);
+    const huge = new Uint8Array(3 * 1024 * 1024);
+    huge.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+    expect((await uploadAvatar(deps, userId, huge)).ok).toBe(false);
   });
 });
 

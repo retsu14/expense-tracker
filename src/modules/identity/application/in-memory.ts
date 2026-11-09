@@ -124,8 +124,22 @@ export function createInMemoryDeps(start = new Date("2026-01-01T00:00:00Z")) {
         Promise.resolve(codes.filter((c) => c.userId === userId && !c.used).length),
     },
     storage: {
-      createUploadUrl: (key) => Promise.resolve({ url: `https://r2.test/${key}`, headers: {} }),
-      head: (key) => Promise.resolve(objects.get(key) ?? null),
+      put: (key, body, contentType) => {
+        objects.set(key, { size: body.length, contentType });
+        return Promise.resolve();
+      },
+      get: (key) => {
+        const o = objects.get(key);
+        return Promise.resolve(
+          o
+            ? {
+                body: new Blob([new Uint8Array(o.size)]).stream(),
+                contentType: o.contentType,
+                size: o.size,
+              }
+            : null,
+        );
+      },
       delete: (key) => {
         objects.delete(key);
         return Promise.resolve();
