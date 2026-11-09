@@ -98,6 +98,19 @@ const cpuOnly = new Set<string>();
 const GPU_CRASH =
   /CUDA error|ROCm error|llama-server process has terminated|unable to allocate|out of memory/i;
 
+const KEEP_ALIVE = "30m";
+
+export async function warmUpOllama(base: string, model: string) {
+  try {
+    await fetch(`${base}/api/generate`, {
+      method: "POST",
+      body: JSON.stringify({ model, keep_alive: KEEP_ALIVE, options: { num_ctx: 2048 } }),
+    });
+  } catch {
+    /* warm-up is best effort */
+  }
+}
+
 export function ollamaProvider(base: string, model: string): AssistantProvider {
   const key = `${base}|${model}`;
   const run = async (
@@ -111,11 +124,12 @@ export function ollamaProvider(base: string, model: string): AssistantProvider {
         model,
         messages,
         stream: true,
-        keep_alive: "15m",
+        keep_alive: KEEP_ALIVE,
         ...(opts.json ? { format: opts.json } : {}),
         options: {
           temperature: opts.temperature ?? 0.6,
-          num_predict: opts.maxTokens ?? 512,
+          num_predict: opts.maxTokens ?? 320,
+          num_ctx: 2048,
           repeat_penalty: opts.json ? 1 : 1.15,
           ...(cpuOnly.has(key) ? { num_gpu: 0 } : {}),
         },

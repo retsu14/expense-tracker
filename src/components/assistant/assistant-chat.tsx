@@ -27,7 +27,7 @@ const SUGGESTIONS = [
 ];
 
 export function AssistantChat({ userId, pigName }: { userId: string; pigName: string }) {
-  const { mounted, ready, provider, label, loading } = useAssistant();
+  const { mounted, ready, provider, label, loading, warmUp } = useAssistant();
   const messages = useAssistantStore((s) => s.messages);
   const { ensureOwner, push, patchMessage, clearChat } = useAssistantStore.getState();
   const { snapshot, error } = useSnapshot();
@@ -39,6 +39,10 @@ export function AssistantChat({ userId, pigName }: { userId: string; pigName: st
   useEffect(() => {
     ensureOwner(userId);
   }, [ensureOwner, userId]);
+
+  useEffect(() => {
+    warmUp();
+  }, [warmUp]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: "end" });
@@ -108,6 +112,7 @@ export function AssistantChat({ userId, pigName }: { userId: string; pigName: st
         ],
         {
           signal: ctrl.signal,
+          maxTokens: 300,
           onText: (full) => {
             patchMessage(id, { content: full });
           },

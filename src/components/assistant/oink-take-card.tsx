@@ -28,7 +28,7 @@ function readSaved(key: string): Saved | null {
 }
 
 export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: string }) {
-  const { ready, provider, loading } = useAssistant();
+  const { ready, provider, loading, warmUp } = useAssistant();
   const { snapshot, error } = useSnapshot();
   const [generated, setSummary] = useState<Saved | null>(null);
   const [busy, setBusy] = useState(false);
@@ -49,6 +49,10 @@ export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: str
     [],
   );
 
+  useEffect(() => {
+    warmUp();
+  }, [warmUp]);
+
   const generate = async () => {
     if (!provider || busy) return;
     setBusy(true);
@@ -68,7 +72,7 @@ export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: str
         {
           signal: ctrl.signal,
           temperature: 0.4,
-          maxTokens: 220,
+          maxTokens: 180,
           onText: (full) => {
             setSummary({ text: full, at: Date.now() });
           },

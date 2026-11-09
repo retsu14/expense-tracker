@@ -3,6 +3,7 @@
 import { CircleAlert, Lightbulb, PartyPopper } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { friendlyProgress } from "@/modules/assistant/domain/models";
 import { renderMarkdownLite, splitBold } from "@/modules/assistant/domain/prompts";
 import type { AssistantSnapshot, Tip } from "@/modules/assistant/domain/snapshot";
 import { assistantSnapshotAction } from "@/modules/assistant/presentation/actions";
@@ -115,7 +116,7 @@ export function BrainLoading({ progress, text }: { progress: number; text: strin
           style={{ width: `${String(Math.round(progress * 100))}%` }}
         />
       </div>
-      <p className="line-clamp-1 text-caption text-fg-muted">{text}</p>
+      <p className="line-clamp-1 text-caption text-fg-muted">{friendlyProgress(text, progress)}</p>
     </div>
   );
 }

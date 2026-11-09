@@ -17,7 +17,7 @@ export type AssistantProvider = {
   generate(messages: ChatMessage[], opts?: GenerateOptions): Promise<string>;
 };
 
-export const MAX_HISTORY = 8;
+export const MAX_HISTORY = 6;
 
 export function chatSystemPrompt(pigName: string, data: string) {
   return `You are ${pigName}, a cute, upbeat pink pig who is the user's money buddy inside the Oink expense tracker app (Philippines, pesos ₱).

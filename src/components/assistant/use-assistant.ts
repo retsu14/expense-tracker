@@ -1,11 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
-import { findWebllm, OLLAMA_MODELS } from "@/modules/assistant/domain/models";
+import { findWebllm, ollamaLabel } from "@/modules/assistant/domain/models";
 import type { AssistantProvider } from "@/modules/assistant/domain/prompts";
-import { ollamaProvider } from "@/modules/assistant/infrastructure/ollama";
-import { webllmProvider } from "@/modules/assistant/infrastructure/webllm";
+import { ollamaProvider, warmUpOllama } from "@/modules/assistant/infrastructure/ollama";
+import {
+  isModelCached,
+  isModelLoaded,
+  loadModel,
+  webllmProvider,
+} from "@/modules/assistant/infrastructure/webllm";
 import { useMounted } from "@/lib/use-mounted";
 import { useAssistantStore } from "@/stores/assistant-store";
 
@@ -20,7 +25,8 @@ export function useAssistant() {
   const setLoading = useAssistantStore((s) => s.setLoading);
 
   const model = kind === "webllm" ? webllmModel : ollamaModel;
-  const ready = mounted && enabled && model !== null;
+  const known = kind === "ollama" || findWebllm(model) !== undefined;
+  const ready = mounted && enabled && model !== null && known;
 
   const provider = useMemo<AssistantProvider | null>(() => {
     if (!ready || !model) return null;
@@ -37,11 +43,29 @@ export function useAssistant() {
   }, [ready, kind, model, ollamaUrl, setLoading]);
 
   const label =
-    kind === "webllm"
-      ? (findWebllm(model)?.label ?? model)
-      : (OLLAMA_MODELS.find((m) => m.name === model)?.label ?? model);
+    kind === "webllm" ? (findWebllm(model)?.label ?? "Local model") : ollamaLabel(model ?? "");
 
-  return { mounted, ready, provider, kind, model, label, loading };
+  // load the model before the first question so replies start sooner
+  const warmUp = useCallback(() => {
+    if (!ready || !model) return;
+    if (kind === "ollama") {
+      void warmUpOllama(ollamaUrl, model);
+      return;
+    }
+    if (isModelLoaded(model)) return;
+    void isModelCached(model).then((cached) => {
+      if (!cached) return;
+      loadModel(model, (p) => {
+        setLoading(p.progress >= 1 ? null : p);
+      })
+        .catch(() => undefined)
+        .finally(() => {
+          setLoading(null);
+        });
+    });
+  }, [ready, model, kind, ollamaUrl, setLoading]);
+
+  return { mounted, ready, provider, kind, model, label, loading, warmUp };
 }
 
 export const isAbort = (e: unknown) => e instanceof DOMException && e.name === "AbortError";

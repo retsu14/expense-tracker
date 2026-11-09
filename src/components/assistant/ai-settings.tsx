@@ -1,6 +1,16 @@
 "use client";
 
-import { Brain, Check, Download, Loader2, PlugZap, Trash2, TriangleAlert, X } from "lucide-react";
+import {
+  Brain,
+  Check,
+  Download,
+  HardDrive,
+  Loader2,
+  PlugZap,
+  Trash2,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -16,9 +26,14 @@ import {
   formatBytes,
   isValidOllamaName,
   normalizeOllamaUrl,
+  ollamaLabel,
   OLLAMA_MODELS,
   SPEED_LABEL,
   type Speed,
+  findWebllm,
+  friendlyProgress,
+  LEGACY_WEBLLM,
+  recommendedWebllm,
   WEBLLM_MODELS,
   webllmId,
 } from "@/modules/assistant/domain/models";
@@ -32,10 +47,12 @@ import {
 import {
   cancelLoad,
   isModelCached,
+  keepOnDevice,
   LoadCancelled,
   type LoadProgress,
   loadModel,
   removeModel,
+  storageInfo,
   webgpuStatus,
 } from "@/modules/assistant/infrastructure/webllm";
 import { useAssistantStore } from "@/stores/assistant-store";
@@ -134,16 +151,67 @@ function Progress({
   );
 }
 
+type Device = { isPhone: boolean; isIOS: boolean; standalone: boolean; memory: number | null };
+
+function detectDevice(): Device {
+  const ua = navigator.userAgent;
+  const isIOS =
+    /iPhone|iPad|iPod/i.test(ua) || (ua.includes("Macintosh") && navigator.maxTouchPoints > 1);
+  return {
+    isPhone: isIOS || /Android|Mobile/i.test(ua),
+    isIOS,
+    standalone: matchMedia("(display-mode: standalone)").matches,
+    memory: (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? null,
+  };
+}
+
+function StorageNote({ device, refresh }: { device: Device; refresh: number }) {
+  const [info, setInfo] = useState<Awaited<ReturnType<typeof storageInfo>>>(null);
+  useEffect(() => {
+    let live = true;
+    void storageInfo().then((i) => {
+      if (live) setInfo(i);
+    });
+    return () => {
+      live = false;
+    };
+  }, [refresh]);
+  return (
+    <div className="grid gap-1 rounded-md bg-surface-2 p-3 text-caption text-fg-muted">
+      <p className="flex flex-wrap items-center gap-1.5 font-medium text-fg">
+        <HardDrive className="size-3.5" aria-hidden />
+        Saved on this {device.isPhone ? "phone" : "device"} only
+        {info && info.used > 0 && (
+          <span className="font-normal text-fg-muted">· {formatBytes(info.used)} used</span>
+        )}
+      </p>
+      <p>
+        {info?.persisted
+          ? "Protected from automatic cleanup."
+          : "Your browser may clear it if storage runs low."}{" "}
+        Nothing is uploaded.
+      </p>
+      {device.isIOS && !device.standalone && (
+        <p>On iPhone, add Oink to your Home Screen first and download there to keep it.</p>
+      )}
+    </div>
+  );
+}
+
 function WebllmPanel() {
   const active = useAssistantStore((s) => s.webllmModel);
   const update = useAssistantStore((s) => s.update);
   const [gpu, setGpu] = useState<"checking" | "ok" | "unsupported" | "no-adapter">("checking");
   const [f16, setF16] = useState(true);
+  const [device, setDevice] = useState<Device | null>(null);
   const [cached, setCached] = useState<Record<string, boolean>>({});
+  const [legacy, setLegacy] = useState<string[]>([]);
   const [busy, setBusy] = useState<{ id: string; p: LoadProgress } | null>(null);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     void webgpuStatus().then(async (s) => {
+      setDevice(detectDevice());
       setGpu(s.state);
       setF16(s.f16);
       const pairs = await Promise.all(
@@ -153,28 +221,40 @@ function WebllmPanel() {
         }),
       );
       setCached(Object.fromEntries(pairs));
+      const old = await Promise.all(
+        LEGACY_WEBLLM.map(async (id) => ((await isModelCached(id)) ? id : null)),
+      );
+      setLegacy(old.filter((id): id is string => id !== null));
     });
   }, []);
 
+  useEffect(() => {
+    if (active && !findWebllm(active)) update({ webllmModel: null });
+  }, [active, update]);
+
   const install = async (id: string) => {
     setBusy({ id, p: { progress: 0, text: "Starting download…" } });
+    await keepOnDevice();
     try {
       await loadModel(id, (p) => {
         setBusy({ id, p });
       });
       setCached((c) => ({ ...c, [id]: true }));
       update({ webllmModel: id });
-      toast.success("Brain installed! 🧠🐷", { description: "Works offline from now on." });
+      toast.success("Ready! 🧠🐷", { description: "Saved on this device. Works offline." });
     } catch (e) {
-      if (e instanceof LoadCancelled) toast("Download cancelled");
-      else
-        toast.error("Couldn't load this model", {
-          description: e instanceof Error ? e.message.slice(0, 160) : "Try a smaller one.",
+      const kept = await isModelCached(id);
+      setCached((c) => ({ ...c, [id]: kept }));
+      if (e instanceof LoadCancelled)
+        toast("Download paused", { description: "Tap Download to resume." });
+      else if (kept)
+        toast.error("Downloaded, but it could not start", {
+          description: "This device may need a lighter model.",
         });
-      if (!(e instanceof LoadCancelled)) await removeModel(id).catch(() => undefined);
-      setCached((c) => ({ ...c, [id]: false }));
+      else toast.error("Download failed", { description: "Check your connection and try again." });
     } finally {
       setBusy(null);
+      setRefresh((r) => r + 1);
     }
   };
 
@@ -182,30 +262,40 @@ function WebllmPanel() {
     await removeModel(id);
     setCached((c) => ({ ...c, [id]: false }));
     if (active === id) update({ webllmModel: null });
+    setRefresh((r) => r + 1);
     toast("Model removed", { description: "Storage freed." });
   };
 
-  if (gpu === "checking")
+  const clearLegacy = async () => {
+    await Promise.all(legacy.map((id) => removeModel(id).catch(() => undefined)));
+    setLegacy([]);
+    setRefresh((r) => r + 1);
+    toast("Old downloads removed");
+  };
+
+  if (gpu === "checking" || !device)
     return (
       <p className="flex items-center gap-2 text-body-sm text-fg-muted">
         <Loader2 className="size-4 animate-spin" aria-hidden /> Checking your device…
       </p>
     );
 
+  const best = recommendedWebllm(device.isPhone, device.memory);
+  const models = [...WEBLLM_MODELS].sort((x, y) => Number(y === best) - Number(x === best));
+
   return (
     <div className="grid gap-3">
-      {gpu !== "ok" ? (
+      {gpu !== "ok" && (
         <p className="flex gap-2 rounded-md bg-warning/15 p-3 text-body-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
           <span>
             This browser can&apos;t run on-device AI. Try <strong>Ollama</strong> instead.
           </span>
         </p>
-      ) : (
-        <p className="text-body-sm text-fg-muted">Downloads once, then works offline. Use Wi-Fi.</p>
       )}
+      <StorageNote device={device} refresh={refresh} />
       <ul className="grid gap-2">
-        {WEBLLM_MODELS.map((m) => {
+        {models.map((m) => {
           const id = webllmId(m, f16);
           const isCached = cached[id] === true;
           const isActive = active === id && isCached;
@@ -214,14 +304,17 @@ function WebllmPanel() {
             <ModelRow
               key={id}
               title={m.label}
-              meta={`~${formatBytes(m.downloadMB * 1e6)} download · ${formatBytes((f16 ? m.vramMB : m.vramF32MB) * 1e6)} GPU memory`}
+              meta={`~${formatBytes(m.downloadMB * 1e6)} download · ${formatBytes((f16 ? m.vramMB : m.vramF32MB) * 1e6)} memory`}
               note={m.note}
-              speed={m.speed}
-              recommended={m.recommended}
+              recommended={m === best}
               active={isActive}
             >
               {loadingThis ? (
-                <Progress value={busy.p.progress} text={busy.p.text} onCancel={cancelLoad} />
+                <Progress
+                  value={busy.p.progress}
+                  text={friendlyProgress(busy.p.text, busy.p.progress)}
+                  onCancel={cancelLoad}
+                />
               ) : isCached ? (
                 <>
                   {isActive ? (
@@ -255,6 +348,16 @@ function WebllmPanel() {
           );
         })}
       </ul>
+      {legacy.length > 0 && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="justify-self-start"
+          onClick={() => void clearLegacy()}
+        >
+          <Trash2 aria-hidden /> Remove old downloads
+        </Button>
+      )}
     </div>
   );
 }
@@ -447,7 +550,7 @@ function OllamaPanel() {
                 {models.map((m) => (
                   <ModelRow
                     key={m.name}
-                    title={m.name}
+                    title={ollamaLabel(m.name)}
                     meta={m.cloud ? "Cloud · runs on Ollama's servers" : formatBytes(m.size)}
                     active={active === m.name}
                   >
@@ -466,7 +569,10 @@ function OllamaPanel() {
                         Use
                       </Button>
                     )}
-                    <ConfirmRemove label={m.name} onConfirm={() => void remove(m.name)} />
+                    <ConfirmRemove
+                      label={ollamaLabel(m.name)}
+                      onConfirm={() => void remove(m.name)}
+                    />
                   </ModelRow>
                 ))}
               </ul>
@@ -487,9 +593,8 @@ function OllamaPanel() {
                 <ModelRow
                   key={m.name}
                   title={m.label}
-                  meta={`${m.name} · ${String(m.sizeGB)} GB · ${String(m.ramGB)} GB+ RAM`}
+                  meta={`${String(m.sizeGB)} GB download · ${String(m.ramGB)} GB+ RAM`}
                   note={m.note}
-                  speed={m.speed}
                   recommended={m.recommended}
                 >
                   {pullProgress(m.name) ?? (
