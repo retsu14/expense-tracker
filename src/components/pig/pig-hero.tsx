@@ -1,14 +1,22 @@
 "use client";
 
-import { CircleAlert, CircleCheck, MessageCircleHeart } from "lucide-react";
+import { CircleAlert, CircleCheck, MessageCircleHeart, Trophy } from "lucide-react";
+import { AnimatePresence, m, useReducedMotion } from "motion/react";
 import Link from "next/link";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
+import { formatPeso } from "@/lib/money";
 import { useMounted } from "@/lib/use-mounted";
 import { cn } from "@/lib/utils";
 import { HEALTH_LABEL, type HealthReport } from "@/modules/mascot/domain/health";
+import { type Milestone, MILESTONES, type Outfit } from "@/modules/mascot/domain/milestones";
 import { deriveMood, isNight } from "@/modules/mascot/domain/mood";
+import { celebratedAction } from "@/modules/mascot/presentation/actions";
 import { useMascotStore } from "@/stores/mascot-store";
+import { useSettingsStore } from "@/stores/settings-store";
+
+import { playOink } from "./oink-sound";
+import { OutfitArt } from "./pig-outfits";
 
 import { Pig } from "./pig";
 import { SpeechSlot, useSpeech } from "./pig-with-bubble";
@@ -53,12 +61,24 @@ function greeting(report: HealthReport, hour: number, name: string, tight: boole
   }
 }
 
+export type HeroMascot = {
+  outfit: Outfit | null;
+  pending: Milestone | null;
+  next: { milestone: Milestone; remaining: number; pct: number } | null;
+};
+
+const before = (m: Milestone) => {
+  const i = MILESTONES.findIndex((x) => x.id === m.id);
+  return i > 0 ? (MILESTONES[i - 1]?.id ?? null) : null;
+};
+
 export function PigHero({
   name,
   pigName,
   report,
   budgetUsedPct,
   alertPct,
+  mascot,
   className,
 }: {
   name: string;
@@ -66,6 +86,7 @@ export function PigHero({
   report: HealthReport;
   budgetUsedPct: number | null;
   alertPct: number;
+  mascot: HeroMascot;
   className?: string;
 }) {
   const mounted = useMounted();
@@ -73,10 +94,44 @@ export function PigHero({
   const say = useMascotStore((s) => s.say);
   const level = report.level;
   const speech = useSpeech();
+  const speak = speech.say;
+  const reduced = useReducedMotion() ?? false;
+  const { pending, next } = mascot;
+  const [shown, setShown] = useState(pending ? before(pending) : mascot.outfit);
+  const [burst, setBurst] = useState(0);
+  const [badge, setBadge] = useState<Milestone | null>(null);
+
+  useEffect(() => {
+    if (!mounted || !pending) return;
+    const [drop, wear, cheer]: [number, number, number] = reduced ? [0, 0, 0] : [900, 2150, 2700];
+    const timers = [
+      setTimeout(() => {
+        setBurst(1);
+      }, drop),
+      setTimeout(() => {
+        setShown(pending.id);
+      }, wear),
+      setTimeout(() => {
+        setBadge(pending);
+        speak(pending.line);
+        const { haptics, sound } = useSettingsStore.getState();
+        if (haptics && "vibrate" in navigator) navigator.vibrate([20, 60, 30]);
+        if (sound) playOink();
+        void celebratedAction();
+      }, cheer),
+      setTimeout(() => {
+        setBadge(null);
+      }, cheer + 5000),
+    ];
+    return () => {
+      timers.forEach(clearTimeout);
+    };
+  }, [mounted, pending, reduced, speak]);
 
   useEffect(() => {
     const hour = new Date().getHours();
     setMood(deriveMood({ hour, budgetUsedPct, alertPct, health: level }));
+    if (pending) return;
     const t = setTimeout(() => {
       say(
         greeting(
@@ -90,7 +145,7 @@ export function PigHero({
     return () => {
       clearTimeout(t);
     };
-  }, [setMood, say, name, report, level, budgetUsedPct, alertPct]);
+  }, [setMood, say, name, report, level, budgetUsedPct, alertPct, pending]);
 
   return (
     <section
@@ -114,10 +169,22 @@ export function PigHero({
                 listen
                 name={pigName}
                 health={level}
+                outfit={shown}
+                burst={burst}
                 onSay={speech.say}
                 className="relative size-28! @3xs:size-24! @xs:size-28! @sm:size-36!"
               />
             ) : null}
+            {next && next.pct >= 90 && !pending && (
+              <m.span
+                aria-hidden
+                className="absolute -top-1 -right-3 w-10 opacity-40 grayscale"
+                animate={reduced ? {} : { y: [0, -5, 0], rotate: [-6, 6, -6] }}
+                transition={{ repeat: Infinity, duration: 2.6, ease: "easeInOut" }}
+              >
+                <OutfitArt outfit={next.milestone.id} className="w-full" />
+              </m.span>
+            )}
           </div>
           <div className="grid min-w-0 gap-2">
             <div className="flex flex-wrap items-baseline justify-center gap-x-2 @3xs:justify-between">
@@ -153,6 +220,50 @@ export function PigHero({
             />
           </div>
         </div>
+
+        <Link
+          href="/settings#badges"
+          className="group grid gap-1 rounded-md text-caption text-fg-muted"
+        >
+          {next ? (
+            <>
+              <span className="flex justify-between gap-2">
+                <span className="truncate">
+                  Next: <span className="font-medium text-fg">{next.milestone.name}</span>
+                </span>
+                <span className="shrink-0 tabular group-hover:text-fg">
+                  {formatPeso(next.remaining, { whole: true })} to go
+                </span>
+              </span>
+              <span className="h-1 overflow-hidden rounded-full bg-bg/60">
+                <span
+                  className="block h-full rounded-full bg-pig transition-[width] duration-500"
+                  style={{ width: `${String(Math.max(3, next.pct))}%` }}
+                />
+              </span>
+            </>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 font-medium text-fg">
+              <Trophy className="size-3.5 text-warning" aria-hidden /> Every badge earned
+            </span>
+          )}
+        </Link>
+
+        <AnimatePresence>
+          {badge && (
+            <m.p
+              role="status"
+              initial={{ opacity: 0, scale: 0.4, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ type: "spring", stiffness: 420, damping: 16 }}
+              className="shine inline-flex items-center gap-2 justify-self-center rounded-full bg-warning/20 py-1.5 pr-4 pl-2 text-body-sm font-semibold"
+            >
+              <OutfitArt outfit={badge.id} className="h-5 w-7" />
+              {badge.name} unlocked · {formatPeso(badge.amount, { whole: true })}
+            </m.p>
+          )}
+        </AnimatePresence>
 
         <ul className="flex flex-wrap gap-1.5">
           {report.reasons.map((r) => (
