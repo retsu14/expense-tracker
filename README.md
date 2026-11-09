@@ -1,36 +1,191 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Oink 🐷
 
-## Getting Started
+Expense and budget tracker for the Philippines, with a pig that gets chubby when your money is healthy and thin when it isn't.
 
-First, run the development server:
+[![CI](https://github.com/retsu14/expense-tracker/actions/workflows/ci.yml/badge.svg?branch=development)](https://github.com/retsu14/expense-tracker/actions/workflows/ci.yml)
+
+<p align="center">
+  <img src="docs/screenshots/home-desktop.jpg" alt="Oink home on desktop" width="68%" />
+  <img src="docs/screenshots/home-mobile.jpg" alt="Oink home on a phone" width="24%" />
+</p>
+
+## Features
+
+- **Track money** — expenses, income and transfers across wallets (cash, GCash, Maya, banks). Split a purchase across categories, tag entries, edit in bulk, undo deletes.
+- **Type it** — write `lunch 150 gcash yesterday` and the form fills itself.
+- **Plan** — monthly or pay-cycle budgets with a safe-to-spend-per-day figure, bills and subscriptions with reminders, savings goals, and utang (money lent or borrowed).
+- **Insights** — spending by category, trends, a daily heatmap, a 30-day cash-flow forecast, a monthly recap you can share, and CSV/JSON export.
+- **The pig** — a health score from your budgets, balance, bills and debts. It reacts to taps, follows your cursor and talks.
+- **Optional local AI** — chat about your money and get monthly check-ins, running in your browser (WebLLM) or through [Ollama](https://ollama.com). Nothing leaves your device.
+- **Works like an app** — installable PWA, logs offline and syncs later, optional PIN lock, dark and light themes, usable down to 320px screens.
+
+<p align="center">
+  <img src="docs/screenshots/pig-thriving.png" alt="Thriving pig" width="20%" />
+  <img src="docs/screenshots/pig-healthy.png" alt="Healthy pig" width="20%" />
+  <img src="docs/screenshots/pig-thin.png" alt="Thin pig" width="20%" />
+  <img src="docs/screenshots/pig-famished.png" alt="Starving pig" width="20%" />
+  <br />
+  <sub>Thriving · Healthy · Getting thin · Starving</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/insights-desktop.jpg" alt="Insights page" width="80%" />
+</p>
+
+## Tech stack
+
+| Area    | Tools                                                                  |
+| ------- | ---------------------------------------------------------------------- |
+| App     | Next.js 16 (App Router, server actions), React 19, TypeScript (strict) |
+| UI      | Tailwind CSS 4, Radix UI, Motion, Recharts, vaul, sonner, Zustand      |
+| Data    | Neon Postgres, Drizzle ORM (SQL migrations in `drizzle/`)              |
+| Storage | Cloudflare R2 for avatars (server-side only, private bucket)           |
+| Auth    | Username + password (Argon2id), one-time recovery codes, no email      |
+| AI      | WebLLM (WebGPU) or Ollama, both optional                               |
+| Quality | Vitest, Playwright + axe, ESLint, Prettier, Husky, commitlint          |
+
+## Getting started
+
+### Requirements
+
+- Node.js **24.14** (see `.nvmrc`)
+- A [Neon](https://neon.tech) Postgres database
+- A [Cloudflare R2](https://developers.cloudflare.com/r2/) bucket and an API token with read/write access
+- Docker (optional, for the dev container)
+
+### 1. Configure
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable               | Required | Description                                             |
+| ---------------------- | -------- | ------------------------------------------------------- |
+| `DATABASE_URL`         | Yes      | Neon connection string (`?sslmode=require`)             |
+| `R2_ACCOUNT_ID`        | Yes      | Cloudflare account ID                                   |
+| `R2_ACCESS_KEY_ID`     | Yes      | R2 API token access key                                 |
+| `R2_SECRET_ACCESS_KEY` | Yes      | R2 API token secret                                     |
+| `R2_BUCKET`            | Yes      | Bucket name for avatars                                 |
+| `APP_URL`              | No       | Public URL of the app (default `http://localhost:3000`) |
+
+The bucket can stay private and needs no CORS rules: uploads and downloads go through the app.
+
+### 2. Install and migrate
+
+```bash
+npm install
+```
+
+```bash
+npm run db:migrate
+```
+
+### 3. Run
+
+With Docker (hot reload, uses `.env.local`):
+
+```bash
+docker compose up
+```
+
+Or directly:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000, create an account and follow the short setup.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command               | What it does                                 |
+| --------------------- | -------------------------------------------- |
+| `npm run dev`         | Start the dev server                         |
+| `npm run build`       | Production build                             |
+| `npm start`           | Serve the production build                   |
+| `npm run check`       | Typecheck, lint, format check and unit tests |
+| `npm test`            | Unit tests (Vitest)                          |
+| `npm run e2e`         | End-to-end tests (Playwright)                |
+| `npm run db:generate` | Create a migration from schema changes       |
+| `npm run db:migrate`  | Apply migrations                             |
+| `npm run db:studio`   | Browse the database                          |
+| `npm run icons`       | Regenerate PWA icons                         |
 
-## Learn More
+## Testing
 
-To learn more about Next.js, take a look at the following resources:
+Unit tests cover the domain logic (budgets, forecasts, the entry parser, pig health and more):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm test
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+End-to-end tests register a throwaway user, run the main flows (onboarding, quick entry, budgets, search, export) and check accessibility with axe on desktop and a 320px phone. The test user is deleted afterwards. They use your installed Chrome and run best against a production build:
 
-## Deploy on Vercel
+```bash
+npm run build && npx next start -p 3100
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+E2E_BASE_URL=http://localhost:3100 npm run e2e
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Optional local AI
+
+Turn it on in **Settings → AI**.
+
+- **This browser** — downloads a small model once (270 MB–2.2 GB) and runs it with WebGPU. Needs a recent Chrome, Edge or Safari. GPUs without 16-bit shader support get a compatible build automatically.
+- **Ollama** — install [Ollama](https://ollama.com/download), then download a model from Settings. Ollama allows `localhost` by default. For a deployed site, allow its origin and restart Ollama:
+
+  ```bash
+  OLLAMA_ORIGINS=https://your-domain.com ollama serve
+  ```
+
+The AI only sees computed totals (budgets, bills, goals, balances), never raw transactions.
+
+## Project structure
+
+Domain-driven layout. Each module keeps its business rules free of framework code; ESLint enforces the layer boundaries.
+
+```
+src/
+├── app/                 Routes, layouts, API route handlers
+├── components/          UI (pig, layout, forms, charts, ui primitives)
+├── modules/
+│   ├── identity/        Accounts, sessions, recovery codes, avatars
+│   ├── ledger/          Wallets, categories, transactions, CSV import
+│   ├── planning/        Budgets, bills, goals, debts, notifications
+│   ├── analytics/       Insights, forecast, recap, export
+│   ├── assistant/       Entry parser, AI prompts, WebLLM/Ollama adapters
+│   └── mascot/          Pig mood and health scoring
+│       └── <module>/{domain, application, infrastructure, presentation}
+├── shared/              DB client, env, storage, kernel (money, time, result)
+├── stores/              Zustand stores
+└── proxy.ts             Auth redirects and per-request CSP nonce
+e2e/                     Playwright tests
+drizzle/                 SQL migrations
+```
+
+## Deployment
+
+**Vercel** — import the repo, add the environment variables above, then run migrations against the production database. No extra build settings are needed.
+
+**Docker** — the `production` stage builds a standalone server:
+
+```bash
+docker build --target production -t oink .
+```
+
+```bash
+docker run -p 3000:3000 --env-file .env.local oink
+```
+
+## Security
+
+- Argon2id password hashing, rate-limited sign-in and recovery, sign out other devices
+- Strict Content Security Policy with per-request nonces, HSTS and frame blocking
+- Every query is scoped to the signed-in user
+- Avatars are type-checked by file signature, limited to 2 MB and stored in a private bucket
+
+## Contributing
+
+Branch from `development`, keep `npm run check` green and use [Conventional Commits](https://www.conventionalcommits.org) (enforced on commit).
