@@ -26,7 +26,7 @@ export function SmartEntry({
   context: EntryContext;
   onApply: (draft: EntryDraft) => void;
 }) {
-  const { ready, provider, loading } = useAssistant();
+  const { ready, provider, loading, warmUp } = useAssistant();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [hint, setHint] = useState<string | null>(null);
@@ -35,7 +35,10 @@ export function SmartEntry({
     const input = text.trim();
     if (!input || busy) return;
     let draft = parseEntry(input, context);
-    if (provider) {
+    const complete =
+      draft.amount !== null &&
+      (draft.kind === "transfer" ? draft.toAccountId !== null : draft.categoryId !== null);
+    if (provider && !complete) {
       setBusy(true);
       try {
         const raw = await provider.generate(
@@ -46,8 +49,8 @@ export function SmartEntry({
           {
             json: ENTRY_SCHEMA,
             temperature: 0,
-            maxTokens: 160,
-            signal: AbortSignal.timeout(60_000),
+            maxTokens: 120,
+            signal: AbortSignal.timeout(30_000),
           },
         );
         draft = mergeDrafts(draft, parseAiEntry(raw, context));
@@ -78,6 +81,7 @@ export function SmartEntry({
           autoComplete="off"
           enterKeyHint="go"
           aria-describedby="qa-smart-hint"
+          onFocus={warmUp}
           onChange={(e) => {
             setText(e.target.value);
             setHint(null);

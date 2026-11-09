@@ -15,6 +15,9 @@ const listeners = new Set<(p: LoadProgress) => void>();
 
 const lib = () => import("@mlc-ai/web-llm");
 
+// smaller KV cache: faster load, less memory, plenty for short money chats
+const CHAT_OPTS = { context_window_size: 2048 };
+
 export class LoadCancelled extends Error {
   constructor() {
     super("Download cancelled");
@@ -79,10 +82,15 @@ export function loadModel(model: string, onProgress?: (p: LoadProgress) => void)
     const { CreateWebWorkerMLCEngine } = await lib();
     if (engine) {
       engine.setInitProgressCallback(report);
-      await engine.reload(model);
+      await engine.reload(model, CHAT_OPTS);
     } else {
       worker = new Worker(new URL("./webllm.worker.ts", import.meta.url), { type: "module" });
-      engine = await CreateWebWorkerMLCEngine(worker, model, { initProgressCallback: report });
+      engine = await CreateWebWorkerMLCEngine(
+        worker,
+        model,
+        { initProgressCallback: report },
+        CHAT_OPTS,
+      );
     }
     current = model;
   })();
@@ -105,6 +113,26 @@ export function loadModel(model: string, onProgress?: (p: LoadProgress) => void)
     })
     .catch(() => undefined);
   return promise;
+}
+
+export async function keepOnDevice() {
+  try {
+    return (await navigator.storage.persisted()) || (await navigator.storage.persist());
+  } catch {
+    return false;
+  }
+}
+
+export async function storageInfo() {
+  try {
+    const [estimate, persisted] = await Promise.all([
+      navigator.storage.estimate(),
+      navigator.storage.persisted(),
+    ]);
+    return { used: estimate.usage ?? 0, quota: estimate.quota ?? 0, persisted };
+  } catch {
+    return null;
+  }
 }
 
 export function cancelLoad() {

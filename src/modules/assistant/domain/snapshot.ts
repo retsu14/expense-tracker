@@ -59,7 +59,13 @@ export function snapshotToText(s: AssistantSnapshot) {
   ];
   if (s.categories.length)
     lines.push(
-      `Top spending: ${s.categories.map((c) => `${c.name} ${peso(c.total)} (${String(c.share)}%${c.delta !== null ? `, ${c.delta > 0 ? "+" : ""}${String(c.delta)}% vs all of last month` : ""})`).join("; ")}.`,
+      `Top spending: ${s.categories
+        .slice(0, 4)
+        .map(
+          (c) =>
+            `${c.name} ${peso(c.total)} (${String(c.share)}%${c.delta !== null ? `, ${c.delta > 0 ? "+" : ""}${String(c.delta)}% vs last month` : ""})`,
+        )
+        .join("; ")}.`,
     );
   if (s.budgets.length)
     lines.push(
@@ -70,24 +76,40 @@ export function snapshotToText(s: AssistantSnapshot) {
   if (s.nextPayday) lines.push(`Next payday: ${s.nextPayday}.`);
   if (s.bills.length)
     lines.push(
-      `Upcoming bills: ${s.bills.map((b) => `${b.name} ${peso(b.amount)} due ${b.due}${b.status === "overdue" ? " (OVERDUE)" : ""}`).join("; ")}.`,
+      `Upcoming bills: ${s.bills
+        .slice(0, 3)
+        .map(
+          (b) =>
+            `${b.name} ${peso(b.amount)} due ${b.due}${b.status === "overdue" ? " (OVERDUE)" : ""}`,
+        )
+        .join("; ")}.`,
     );
+  else lines.push("No upcoming bills.");
   lines.push(
     `30-day balance forecast: lowest ${peso(s.forecast.lowBalance)} on ${s.forecast.lowDate}, ${peso(s.forecast.endBalance)} by ${s.forecast.until}.`,
   );
   if (s.goals.length)
     lines.push(
-      `Goals: ${s.goals.map((g) => `${g.name} ${peso(g.saved)}/${peso(g.target)} (${String(Math.round(g.pct))}%${g.deadline ? `, by ${g.deadline}` : ""}${g.monthlyNeeded ? `, needs ${peso(g.monthlyNeeded)}/month` : ""})`).join("; ")}.`,
+      `Goals: ${s.goals
+        .slice(0, 3)
+        .map(
+          (g) =>
+            `${g.name} ${peso(g.saved)}/${peso(g.target)} (${String(Math.round(g.pct))}%${g.deadline ? `, by ${g.deadline}` : ""}${g.monthlyNeeded ? `, needs ${peso(g.monthlyNeeded)}/month` : ""})`,
+        )
+        .join("; ")}.`,
     );
+  else lines.push("No savings goals.");
   if (s.debts.iOwe || s.debts.owedToMe)
     lines.push(
       `Utang: user owes ${peso(s.debts.iOwe)}, others owe user ${peso(s.debts.owedToMe)}${s.debts.overdue ? `, ${String(s.debts.overdue)} overdue` : ""}.`,
     );
   if (s.biggest.length)
     lines.push(
-      `Biggest expenses: ${s.biggest.map((b) => `${b.label} ${peso(b.amount)} on ${b.day}`).join("; ")}.`,
+      `Biggest expenses: ${s.biggest
+        .slice(0, 2)
+        .map((b) => `${b.label} ${peso(b.amount)} on ${b.day}`)
+        .join("; ")}.`,
     );
-  if (s.tags.length) lines.push(`Common tags: ${s.tags.map((t) => `#${t}`).join(", ")}.`);
   return lines.join("\n");
 }
 

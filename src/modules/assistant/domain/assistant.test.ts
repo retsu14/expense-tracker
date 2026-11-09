@@ -203,3 +203,21 @@ describe("category priority", () => {
     expect(parseEntry("padala kay mama 2000", c).categoryId).toBe("fam");
   });
 });
+
+describe("model catalog", () => {
+  it("recommends lighter models for phones and low-memory devices", async () => {
+    const { recommendedWebllm } = await import("./models");
+    expect(recommendedWebllm(true, null)?.label).toMatch(/^Fast/);
+    expect(recommendedWebllm(false, 16)?.label).toMatch(/^Balanced/);
+    expect(recommendedWebllm(true, 2)?.label).toMatch(/^Tiny/);
+  });
+
+  it("uses tier names instead of model brands", async () => {
+    const { WEBLLM_MODELS, OLLAMA_MODELS, ollamaLabel, friendlyProgress } =
+      await import("./models");
+    for (const m of [...WEBLLM_MODELS, ...OLLAMA_MODELS])
+      expect(m.label).toMatch(/^(Tiny|Fast|Balanced|Smart) · /);
+    expect(ollamaLabel("qwen2.5:3b")).toBe("Balanced · 3B");
+    expect(friendlyProgress("Fetching param cache[1/7]", 0.42)).toBe("Downloading… 42%");
+  });
+});
