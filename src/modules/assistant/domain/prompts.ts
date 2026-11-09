@@ -19,6 +19,12 @@ export type AssistantProvider = {
 
 export const MAX_HISTORY = 6;
 
+// window jumps in blocks instead of sliding, so the model can reuse its cache between turns
+export function chatWindow<T>(history: T[]) {
+  const n = history.length;
+  return n <= MAX_HISTORY ? history : history.slice(-(((n - 1) % MAX_HISTORY) + 1));
+}
+
 export function chatSystemPrompt(pigName: string, data: string) {
   return `You are ${pigName}, a cute, upbeat pink pig who is the user's money buddy inside the Oink expense tracker app (Philippines, pesos ₱).
 Rules:

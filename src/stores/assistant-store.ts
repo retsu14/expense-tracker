@@ -21,9 +21,7 @@ type Prefs = {
 type AssistantState = Prefs & {
   owner: string | null;
   messages: StoredMessage[];
-  loading: { progress: number; text: string } | null;
   update: (patch: Partial<Prefs>) => void;
-  setLoading: (loading: AssistantState["loading"]) => void;
   ensureOwner: (userId: string) => void;
   push: (message: StoredMessage) => void;
   patchMessage: (id: string, patch: Partial<StoredMessage>) => void;
@@ -42,12 +40,8 @@ export const useAssistantStore = create<AssistantState>()(
       ollamaModel: null,
       owner: null,
       messages: [],
-      loading: null,
       update: (patch) => {
         set(patch);
-      },
-      setLoading: (loading) => {
-        set({ loading });
       },
       ensureOwner: (userId) => {
         if (get().owner !== userId) set({ owner: userId, messages: [] });
@@ -66,7 +60,18 @@ export const useAssistantStore = create<AssistantState>()(
       name: "oink-assistant",
       storage: createJSONStorage(() => localStorage),
       version: 1,
-      partialize: ({ loading: _loading, ...rest }) => rest,
     },
   ),
+);
+
+type Loading = { progress: number; text: string } | null;
+
+// kept out of the persisted store so progress ticks never hit localStorage
+export const useAiLoading = create<{ loading: Loading; setLoading: (l: Loading) => void }>()(
+  (set) => ({
+    loading: null,
+    setLoading: (loading) => {
+      set({ loading });
+    },
+  }),
 );
