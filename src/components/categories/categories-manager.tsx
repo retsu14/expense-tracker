@@ -129,8 +129,7 @@ export function CategoriesManager({
         </CardHeader>
         {templates.length === 0 ? (
           <p className="text-body-sm text-fg-muted">
-            Tick &ldquo;Save as favorite&rdquo; when adding a transaction to log it in one tap next
-            time.
+            Tick &ldquo;Save as favorite&rdquo; when adding a transaction.
           </p>
         ) : (
           <ul className="divide-y divide-border">

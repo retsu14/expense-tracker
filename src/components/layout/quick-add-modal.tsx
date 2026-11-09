@@ -87,7 +87,7 @@ export function QuickAddModal({ userId }: { userId: string }) {
           <CloudOff className="size-5" aria-hidden />
           {editId
             ? "You're offline. Editing needs a connection."
-            : "You're offline and Oink hasn't loaded your wallets on this device yet. Connect once, then you can log offline."}
+            : "You're offline. Connect once to log offline."}
         </p>
       ) : editId && !state.data.transaction ? (
         <p className="text-body-sm text-fg-muted">
@@ -98,7 +98,7 @@ export function QuickAddModal({ userId }: { userId: string }) {
           {state.offline && (
             <p className="mb-4 flex items-center gap-2 rounded-md bg-warning/15 px-3 py-2 text-caption text-fg">
               <CloudOff className="size-4" aria-hidden />
-              Offline mode — this will be saved on your device and synced later.
+              Offline. This will sync later.
             </p>
           )}
           <QuickAddForm

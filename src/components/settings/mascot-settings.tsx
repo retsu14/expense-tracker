@@ -6,8 +6,8 @@ import { useMounted } from "@/lib/use-mounted";
 import { useSettingsStore } from "@/stores/settings-store";
 
 const rows = [
-  { key: "sound", label: "Oink sounds", hint: "Play a little oink when you tap the pig." },
-  { key: "haptics", label: "Haptics", hint: "Vibrate on supported phones." },
+  { key: "sound", label: "Oink sounds", hint: "Oink when you tap the pig." },
+  { key: "haptics", label: "Haptics", hint: "Vibrate on tap." },
 ] as const;
 
 export function MascotSettings() {

@@ -121,9 +121,7 @@ export function PigHero({
           </div>
           <div className="grid min-w-0 gap-2">
             <div className="flex flex-wrap items-baseline justify-center gap-x-2 @3xs:justify-between">
-              <p className="text-caption tracking-wide text-fg-muted uppercase">
-                {pigName}&apos;s health
-              </p>
+              <p className="eyebrow">{pigName}&apos;s health</p>
               <p className="text-caption text-fg-muted tabular">
                 <span className="font-semibold text-fg">{report.score}</span>/100
               </p>
@@ -181,7 +179,6 @@ export function PigHero({
         >
           <MessageCircleHeart className="size-4 text-pig" aria-hidden />
           Ask {pigName}
-          <span className="hidden @xs:inline">about your money</span>
         </Link>
       </div>
     </section>

@@ -99,7 +99,7 @@ export function GoalsView({ goals }: { goals: GoalWithProgress[] }) {
       {active.length === 0 && done.length === 0 ? (
         <EmptyState
           title="What are you saving for?"
-          description="A new phone, a trip to Siargao, an emergency fund — set a goal and watch your piggy bank fill up."
+          description="Save for a phone, a trip or an emergency fund."
           action={
             <Button
               onClick={() => {
@@ -382,9 +382,7 @@ function MoveMoney({
           className="tabular"
         />
         {error && <p className="text-body-sm text-expense">{error}</p>}
-        <p className="text-caption font-normal text-fg-muted">
-          This tracks money you set aside. Your wallet balances don&apos;t change.
-        </p>
+        <p className="text-caption font-normal text-fg-muted">Wallet balances won&apos;t change.</p>
       </div>
       <Button type="submit" size="lg" disabled={pending}>
         {pending ? "Saving…" : direction === "add" ? "Add to goal" : "Withdraw"}

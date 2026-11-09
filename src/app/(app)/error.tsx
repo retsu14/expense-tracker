@@ -19,7 +19,7 @@ export default function AppError({
   return (
     <EmptyState
       title="Oops, something went wrong"
-      description="Oink tripped over something. Try again in a moment."
+      description="Something went wrong. Try again."
       action={<Button onClick={retry}>Try again</Button>}
     />
   );

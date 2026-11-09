@@ -13,7 +13,7 @@ export default async function NotificationsPage() {
   const items = await listNotifications(planningDeps(), user.id);
   return (
     <>
-      <PageHeader title="Notifications" description="Budget alerts, bill reminders and wins." />
+      <PageHeader title="Notifications" />
       <NotificationList items={items} />
     </>
   );

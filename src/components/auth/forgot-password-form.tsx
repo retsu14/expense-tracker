@@ -41,9 +41,7 @@ export function ForgotPasswordForm() {
   return (
     <>
       <h1 className="text-h1-sm">Reset your password</h1>
-      <p className="mt-1 mb-6 text-body-sm text-fg-muted">
-        Enter your username and one of the recovery codes you saved when you signed up.
-      </p>
+      <p className="mt-1 mb-6 text-body-sm text-fg-muted">Use your username and a recovery code.</p>
       <form {...formProps} className="grid gap-4" noValidate>
         {formError && <FormAlert>{formError}</FormAlert>}
         <Field id="username" label="Username" error={fieldError("username")}>

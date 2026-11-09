@@ -140,10 +140,7 @@ export function OnboardingWizard({ name, pigName }: { name: string; pigName: str
             <h1 className="text-h1-sm">
               Hi {name}, I&apos;m {pigName}!
             </h1>
-            <p className="mt-2 text-body text-fg-muted">
-              I&apos;ll help you track every peso, stick to budgets and save for the things you
-              love. Let&apos;s set up in under a minute.
-            </p>
+            <p className="mt-2 text-body text-fg-muted">Let&apos;s set up in under a minute.</p>
           </div>
           <Button
             size="lg"
@@ -161,7 +158,7 @@ export function OnboardingWizard({ name, pigName }: { name: string; pigName: str
           <div>
             <h1 className="text-h1-sm">Where do you keep your money?</h1>
             <p className="mt-1 text-body-sm text-fg-muted">
-              Pick your wallets and how much is in each right now. You can change this later.
+              Add your wallets and current balances.
             </p>
           </div>
 

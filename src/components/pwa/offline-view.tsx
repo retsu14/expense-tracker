@@ -15,8 +15,7 @@ export function OfflineView() {
       </div>
       <h1 className="text-h1-sm">You&apos;re offline</h1>
       <p className="text-body-sm text-fg-muted">
-        Oink is napping until the internet comes back. Anything you logged offline is saved on this
-        device and will sync automatically.
+        Entries you log now will sync when you&apos;re back online.
       </p>
       <Button
         onClick={() => {

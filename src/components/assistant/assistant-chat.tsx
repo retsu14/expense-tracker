@@ -62,8 +62,7 @@ export function AssistantChat({ userId, pigName }: { userId: string; pigName: st
           </div>
           <h2 className="text-h3">Give {pigName} a brain</h2>
           <p className="max-w-md text-body-sm text-fg-muted">
-            Turn on the optional AI to chat about your money. It runs privately on your device, so
-            your data never leaves it.
+            Turn on AI to chat about your money. It stays on your device.
           </p>
           <Button asChild>
             <Link href="/settings#ai">
@@ -154,10 +153,7 @@ export function AssistantChat({ userId, pigName }: { userId: string; pigName: st
         {messages.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
             <PigWithBubble size={110} mood="happy" name={pigName} />
-            <h2 className="text-h3">Hi! Ask me anything about your money.</h2>
-            <p className="text-body-sm text-fg-muted">
-              I only see totals and summaries, never your passwords or full history.
-            </p>
+            <h2 className="text-h3">Ask me about your money</h2>
           </div>
         ) : (
           messages.map((m) =>

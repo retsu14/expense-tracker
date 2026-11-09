@@ -43,7 +43,6 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
     <>
       <PageHeader
         title="Activity"
-        description="Every peso in and out."
         actions={
           <>
             <Button asChild variant="ghost" size="sm">
@@ -106,10 +105,10 @@ export default async function ActivityPage({ searchParams }: PageProps<"/activit
           accounts={accounts.filter((a) => !a.archived).map((a) => ({ id: a.id, name: a.name }))}
           empty={
             filtered
-              ? { title: "No matches", description: "Try a different search or clear the filters." }
+              ? { title: "No matches", description: "Try another search or clear filters." }
               : {
                   title: "No transactions yet",
-                  description: "Log your first expense and it will show up here.",
+                  description: "Your entries will show up here.",
                   action: <AddTransactionButton />,
                 }
           }

@@ -188,10 +188,7 @@ export function DebtsView({
       </div>
 
       {open.length === 0 ? (
-        <EmptyState
-          title="No utang to track"
-          description="Lent money to a friend or borrowed from family? Track it here so nobody forgets."
-        />
+        <EmptyState title="No utang to track" description="Track money you lent or borrowed." />
       ) : (
         <>
           {section("owed_to_me")}

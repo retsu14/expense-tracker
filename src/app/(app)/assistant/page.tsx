@@ -10,10 +10,7 @@ export default async function AssistantPage() {
   const user = await requireUser();
   return (
     <>
-      <PageHeader
-        title={`Ask ${user.pigName}`}
-        description="Your money buddy, running privately on your device."
-      />
+      <PageHeader title={`Ask ${user.pigName}`} description="Private, on your device." />
       <AssistantChat userId={user.id} pigName={user.pigName} />
     </>
   );

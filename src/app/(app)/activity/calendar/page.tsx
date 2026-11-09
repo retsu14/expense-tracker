@@ -39,7 +39,6 @@ export default async function CalendarPage({ searchParams }: PageProps<"/activit
     <>
       <PageHeader
         title="Calendar"
-        description="Tap a day to see its transactions."
         actions={
           <Button asChild variant="ghost" size="sm">
             <Link href="/activity">

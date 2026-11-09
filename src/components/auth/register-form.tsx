@@ -76,8 +76,7 @@ export function RegisterForm() {
         <div>
           <h1 className="text-h1-sm">Save your recovery codes</h1>
           <p className="mt-1 text-body-sm text-fg-muted">
-            There&apos;s no email on Oink. If you forget your password, one of these codes is the
-            only way back in. Each code works once.
+            The only way back in if you forget your password. Each works once.
           </p>
         </div>
         <RecoveryCodesList

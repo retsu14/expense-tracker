@@ -29,9 +29,7 @@ export function TrashList({ items, timezone }: { items: TransactionView[]; timez
   });
 
   if (items.length === 0) {
-    return (
-      <EmptyState title="Trash is empty" description="Deleted transactions will appear here." />
-    );
+    return <EmptyState title="Trash is empty" description="Nothing deleted." />;
   }
 
   const restore = (ids: string[]) => {
@@ -119,7 +117,7 @@ export function TrashList({ items, timezone }: { items: TransactionView[]; timez
           if (!o) setConfirmIds(null);
         }}
         title="Empty trash?"
-        description="These transactions will be deleted forever. This can't be undone."
+        description="This can't be undone."
       >
         <div className="flex justify-end gap-2">
           <Button

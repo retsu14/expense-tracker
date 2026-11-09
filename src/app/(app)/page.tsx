@@ -96,7 +96,7 @@ export default async function HomePage() {
 
   return (
     <>
-      <PageHeader title="Home" description="Your money at a glance." />
+      <PageHeader title="Home" />
       <div className="grid grid-cols-1 gap-4 lg:grid-flow-row-dense lg:grid-cols-12 lg:gap-6">
         <PigHero
           name={user.displayName}
@@ -118,7 +118,7 @@ export default async function HomePage() {
                     className="mt-1 block text-display-sm md:text-display"
                   />
                   <p className="mt-1 text-body-sm text-fg-muted">
-                    for the next {safe.daysLeft} {safe.daysLeft === 1 ? "day" : "days"}
+                    {safe.daysLeft} {safe.daysLeft === 1 ? "day" : "days"} left
                   </p>
                 </div>
                 {overview.overall && (
@@ -136,9 +136,7 @@ export default async function HomePage() {
                     <span className="font-semibold tabular">
                       {formatPeso(Math.max(0, overview.overall.remaining))}
                     </span>{" "}
-                    <span className="text-fg-muted">
-                      left of {formatPeso(overview.overall.limit)}
-                    </span>
+                    <span className="text-fg-muted">left</span>
                   </li>
                 )}
                 {overview.nextPayday && (
@@ -277,7 +275,7 @@ export default async function HomePage() {
           ) : (
             <EmptyState
               title="No transactions yet"
-              description={`Log your first expense and ${user.pigName} will start tracking for you.`}
+              description="Log your first expense to get started."
               action={<AddTransactionButton />}
               className="border-none py-6"
             />

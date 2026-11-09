@@ -114,7 +114,7 @@ export function BillsView({
             description={
               recurring.length
                 ? "Nothing due in the next 31 days."
-                : "Add rent, Meralco, internet or subscriptions and get reminded before they're due."
+                : "Add rent, utilities or subscriptions to get reminders."
             }
           />
         ) : (
@@ -579,10 +579,8 @@ function RecurringForm({
         <div>
           <Label htmlFor="r-auto">Record automatically</Label>
           <p className="text-caption font-normal text-fg-muted">
-            {kind === "income"
-              ? "Great for a fixed salary."
-              : "For fixed amounts like subscriptions."}{" "}
-            Otherwise you&apos;ll get a reminder to mark it paid.
+            {kind === "income" ? "For a fixed salary." : "For fixed amounts."} Otherwise we&apos;ll
+            remind you.
           </p>
         </div>
         <Switch id="r-auto" checked={autoPost} onCheckedChange={setAutoPost} />

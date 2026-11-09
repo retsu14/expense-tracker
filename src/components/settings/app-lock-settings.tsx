@@ -73,9 +73,7 @@ export function AppLockSettings({ userId }: { userId: string }) {
         </span>
         <div>
           <Label htmlFor="app-lock">App lock</Label>
-          <p className="text-caption font-normal text-fg-muted">
-            Ask for a PIN when opening Oink on this device.
-          </p>
+          <p className="text-caption font-normal text-fg-muted">Require a PIN on this device.</p>
         </div>
       </div>
       <Switch

@@ -19,10 +19,7 @@ export default async function TrashPage() {
 
   return (
     <>
-      <PageHeader
-        title="Trash"
-        description={`Deleted transactions stay here for ${TRASH_RETENTION_DAYS} days.`}
-      />
+      <PageHeader title="Trash" description={`Kept for ${TRASH_RETENTION_DAYS} days.`} />
       <TrashList items={items} timezone={settings.timezone} />
     </>
   );

@@ -17,7 +17,7 @@ export default async function CategoriesPage() {
 
   return (
     <>
-      <PageHeader title="Categories" description="Organize where your money goes." />
+      <PageHeader title="Categories" />
       <CategoriesManager categories={categories} templates={templates} />
     </>
   );

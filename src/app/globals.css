@@ -82,31 +82,33 @@
 @theme {
   --breakpoint-xs: 22.5rem;
   --text-display: clamp(1.75rem, 1.2rem + 2.6vw, 2.5rem);
-  --text-display--line-height: 1.12;
-  --text-display--letter-spacing: -0.01em;
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.03em;
   --text-display--font-weight: 700;
   --text-display-sm: clamp(1.625rem, 1.2rem + 2vw, 2rem);
-  --text-display-sm--line-height: 1.12;
-  --text-display-sm--letter-spacing: -0.01em;
+  --text-display-sm--line-height: 1.08;
+  --text-display-sm--letter-spacing: -0.025em;
   --text-display-sm--font-weight: 700;
   --text-h1: clamp(1.375rem, 1.1rem + 1.3vw, 1.75rem);
-  --text-h1--line-height: 1.22;
-  --text-h1--letter-spacing: -0.01em;
+  --text-h1--line-height: 1.2;
+  --text-h1--letter-spacing: -0.02em;
   --text-h1--font-weight: 700;
   --text-h1-sm: clamp(1.3125rem, 1.1rem + 1vw, 1.5rem);
-  --text-h1-sm--line-height: 1.25;
-  --text-h1-sm--letter-spacing: -0.01em;
+  --text-h1-sm--line-height: 1.2;
+  --text-h1-sm--letter-spacing: -0.02em;
   --text-h1-sm--font-weight: 700;
   --text-h2: 1.25rem;
-  --text-h2--line-height: 1.75rem;
-  --text-h2--font-weight: 600;
+  --text-h2--line-height: 1.6rem;
+  --text-h2--letter-spacing: -0.015em;
+  --text-h2--font-weight: 650;
   --text-h3: 1.0625rem;
-  --text-h3--line-height: 1.5rem;
-  --text-h3--font-weight: 600;
+  --text-h3--line-height: 1.45rem;
+  --text-h3--letter-spacing: -0.01em;
+  --text-h3--font-weight: 650;
   --text-body: 1rem;
   --text-body--line-height: 1.5rem;
   --text-body-sm: 0.875rem;
-  --text-body-sm--line-height: 1.25rem;
+  --text-body-sm--line-height: 1.3rem;
   --text-caption: 0.75rem;
   --text-caption--line-height: 1rem;
   --text-caption--font-weight: 500;
@@ -130,6 +132,18 @@
   body {
     @apply bg-bg font-sans text-body text-fg antialiased;
     overflow-wrap: break-word;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
   }
 
   :where(.grid) > :where(*) {
@@ -169,6 +183,15 @@
 
 @utility tabular {
   font-variant-numeric: tabular-nums;
+}
+
+@utility eyebrow {
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-fg-muted);
 }
 
 @utility pb-safe {

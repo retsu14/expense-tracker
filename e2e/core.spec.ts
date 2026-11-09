@@ -110,7 +110,7 @@ test.describe("signed in", () => {
     await expect(page.getByRole("dialog")).toBeHidden();
 
     await page.goto("/");
-    await expect(page.getByText(/Budget is \d+% used/)).toBeVisible();
+    await expect(page.getByText(/\d+% of budget used/)).toBeVisible();
     await expect(page.getByRole("meter", { name: /health/ })).toBeVisible();
   });
 
