@@ -16,6 +16,7 @@ Expense and budget tracker for the Philippines, with a pig that gets chubby when
 - **Plan** — monthly or pay-cycle budgets with a safe-to-spend-per-day figure, bills and subscriptions with reminders, savings goals, and utang (money lent or borrowed).
 - **Insights** — spending by category, trends, a daily heatmap, a 30-day cash-flow forecast, a monthly recap you can share, and CSV/JSON export.
 - **The pig** — a health score from your budgets, balance, bills and debts. It reacts to taps, follows your cursor and talks.
+- **Pig badges** — reach a total balance of ₱1k, ₱5k, ₱10k, ₱25k, ₱50k, ₱100k, ₱250k and ₱1M to unlock a sprout, bandana, coin charm, shades, grad cap, crown, royal cape and finally a golden pig. Each unlock plays a short celebration, every item has its own idle motion and tap trick, and badges are kept even if your balance drops later.
 - **Optional local AI** — chat about your money and get monthly check-ins, running in your browser (WebLLM) or through [Ollama](https://ollama.com). Nothing leaves your device.
 - **Works like an app** — installable PWA, logs offline and syncs later, optional PIN lock, dark and light themes, usable down to 320px screens.
 
@@ -26,6 +27,12 @@ Expense and budget tracker for the Philippines, with a pig that gets chubby when
   <img src="docs/screenshots/pig-famished.png" alt="Starving pig" width="20%" />
   <br />
   <sub>Thriving · Healthy · Getting thin · Starving</sub>
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/pig-badges.png" alt="Badge shelf with pig outfits" width="60%" />
+  <br />
+  <sub>Badges in Settings: tap an earned one to dress up your pig</sub>
 </p>
 
 <p align="center">
@@ -113,7 +120,7 @@ Open http://localhost:3000, create an account and follow the short setup.
 
 ## Testing
 
-Unit tests cover the domain logic (budgets, forecasts, the entry parser, pig health and more):
+Unit tests cover the domain logic (budgets, forecasts, the entry parser, pig health, badges and more):
 
 ```bash
 npm test
@@ -156,7 +163,7 @@ src/
 │   ├── planning/        Budgets, bills, goals, debts, notifications
 │   ├── analytics/       Insights, forecast, recap, export
 │   ├── assistant/       Entry parser, AI prompts, WebLLM/Ollama adapters
-│   └── mascot/          Pig mood and health scoring
+│   └── mascot/          Pig mood, health scoring and balance badges
 │       └── <module>/{domain, application, infrastructure, presentation}
 ├── shared/              DB client, env, storage, kernel (money, time, result)
 ├── stores/              Zustand stores

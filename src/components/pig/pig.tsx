@@ -1,11 +1,12 @@
 "use client";
 
 import { m, useAnimate, useMotionValue, useReducedMotion, useTransform } from "motion/react";
-import { type KeyboardEvent, useEffect, useRef, useState } from "react";
+import { type KeyboardEvent, useEffect, useId, useRef, useState } from "react";
 
 import { useMediaQuery } from "@/lib/use-media-query";
 import { cn } from "@/lib/utils";
 import { HEALTH_LABEL, type Health } from "@/modules/mascot/domain/health";
+import { milestone, type Outfit } from "@/modules/mascot/domain/milestones";
 import type { Mood } from "@/modules/mascot/domain/mood";
 import { useMascotStore } from "@/stores/mascot-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -26,6 +27,14 @@ import {
   Tears,
   Zzz,
 } from "./pig-parts";
+import {
+  GOLD_MATRIX,
+  GoldenGlints,
+  OutfitBack,
+  OutfitFront,
+  TRICKS,
+  UnlockFx,
+} from "./pig-outfits";
 import { SpeechBubble } from "./speech-bubble";
 import { useBlink } from "./use-blink";
 import { useEyeFollow } from "./use-eye-follow";
@@ -40,6 +49,17 @@ const TAP_LINES: Record<Health, string[]> = {
   healthy: ["Oink!", "Hi there!", "Got any snacks?", "Saving is my cardio", "Every peso counts!"],
   thin: ["My tummy's rumbling…", "Maybe skip the milk tea?", "A little less spending, please?"],
   famished: ["So hungry… 🥺", "Can we save a bit today?", "Feed me with savings, please…"],
+};
+
+const OUTFIT_LINES: Record<Outfit, string> = {
+  sprout: "Watch me grow! 🌱",
+  bandana: "Bandana mode: on!",
+  coin: "Shiny, right? ✨",
+  shades: "Too cool to overspend 😎",
+  grad: "Ipon graduate! 🎓",
+  crown: "Bow to the royal oink 👑",
+  royal: "Royal hog, at your service",
+  golden: "Solid gold, baby! 🏆",
 };
 
 const MOOD_LABEL: Record<Mood, string> = {
@@ -67,6 +87,8 @@ type PigProps = {
   name?: string;
   className?: string;
   onSay?: ((text: string) => void) | undefined;
+  outfit?: Outfit | null | undefined;
+  burst?: number;
 };
 
 export function Pig({
@@ -79,7 +101,10 @@ export function Pig({
   name = "Oink",
   className,
   onSay,
+  outfit = null,
+  burst = 0,
 }: PigProps) {
+  const goldId = useId();
   const storeMood = useMascotStore((s) => s.mood);
   const mood = moodProp ?? storeMood;
 
@@ -156,6 +181,20 @@ export function Pig({
     };
   }, [animated, animate]);
 
+  useEffect(() => {
+    if (!burst || !animated) return;
+    const t = setTimeout(() => {
+      void animate(
+        scope.current,
+        { y: [0, 6, -32, 0, 0], scaleY: [1, 0.86, 1.08, 0.92, 1] },
+        { duration: 0.7, ease: "easeOut" },
+      );
+    }, 850);
+    return () => {
+      clearTimeout(t);
+    };
+  }, [burst, animated, animate, scope]);
+
   useEffect(
     () => () => {
       clearTimeout(pressTimer.current);
@@ -173,8 +212,21 @@ export function Pig({
 
   const tap = () => {
     feedback();
-    say(mood === "sleeping" ? "Zzz... huh? Oh hi!" : (pick(TAP_LINES[health]) ?? "Oink!"));
+    say(
+      mood === "sleeping"
+        ? "Zzz... huh? Oh hi!"
+        : outfit && Math.random() < 0.35
+          ? OUTFIT_LINES[outfit]
+          : (pick(TAP_LINES[health]) ?? "Oink!"),
+    );
     if (!animated) return;
+    if (outfit) {
+      const trick = TRICKS[outfit];
+      void animate("[data-trick]", trick.keyframes, {
+        duration: trick.duration,
+        ease: "easeInOut",
+      });
+    }
     void animate(scope.current, { y: [0, -16, 0], scaleY: [1, 0.92, 1.05, 1] }, { duration: 0.45 });
     void animate("[data-snout]", { scaleX: [1, 1.18, 0.94, 1] }, { duration: 0.35 });
   };
@@ -238,7 +290,8 @@ export function Pig({
 
   const loop = { repeat: Infinity, ease: "easeInOut" } as const;
   const showSparkles = mood === "celebrating";
-  const label = `${name} the pig is ${MOOD_LABEL[mood]}${health === "healthy" ? "" : ` and ${HEALTH_LABEL[health].toLowerCase()}`}.${interactive ? " Press to say hi." : ""}`;
+  const label = `${name} the pig is ${MOOD_LABEL[mood]}${health === "healthy" ? "" : ` and ${HEALTH_LABEL[health].toLowerCase()}`}${outfit ? `, wearing ${milestone(outfit).name}` : ""}.${interactive ? " Press to say hi." : ""}`;
+  const golden = outfit === "golden";
 
   return (
     <div className={cn("relative inline-flex", className)} style={{ width: size, height: size }}>
@@ -304,41 +357,54 @@ export function Pig({
               className="size-full overflow-visible text-fg-muted"
               aria-hidden
             >
-              <Backdrop health={health} animated={animated} />
+              {golden && (
+                <defs>
+                  <filter id={goldId} colorInterpolationFilters="sRGB">
+                    <feColorMatrix type="matrix" values={GOLD_MATRIX} />
+                  </filter>
+                </defs>
+              )}
+              <OutfitBack outfit={outfit} animated={animated} />
+              <g filter={golden ? `url(#${goldId})` : undefined}>
+                <Backdrop health={health} animated={animated} />
 
-              <m.g
-                style={{ originY: 1 }}
-                animate={
-                  animated && mood !== "celebrating"
-                    ? { scaleY: [1, health === "famished" ? 1.012 : 1.025, 1] }
-                    : {}
-                }
-                transition={{
-                  ...loop,
-                  duration: mood === "sleeping" || health === "famished" ? 4.2 : 3.2,
-                }}
-              >
-                <Head health={health} petting={petting} />
-                <Brows mood={mood} />
-                <Eyes
-                  mood={mood}
-                  health={health}
-                  squint={petting || coverEyes}
-                  blinking={blinking}
-                  x={eyes.x}
-                  y={eyes.y}
-                />
-                <Snout />
-                <Mouth mood={mood} health={health} />
-                {mood === "sad" && <Tears still={!animated} />}
-                <CoverHooves show={coverEyes} />
-              </m.g>
+                <m.g
+                  style={{ originY: 1 }}
+                  animate={
+                    animated && mood !== "celebrating"
+                      ? { scaleY: [1, health === "famished" ? 1.012 : 1.025, 1] }
+                      : {}
+                  }
+                  transition={{
+                    ...loop,
+                    duration: mood === "sleeping" || health === "famished" ? 4.2 : 3.2,
+                  }}
+                >
+                  <Head health={health} petting={petting} />
+                  <Brows mood={mood} />
+                  <Eyes
+                    mood={mood}
+                    health={health}
+                    squint={petting || coverEyes}
+                    blinking={blinking}
+                    x={eyes.x}
+                    y={eyes.y}
+                  />
+                  <Snout />
+                  <Mouth mood={mood} health={health} />
+                  {mood === "sad" && <Tears still={!animated} />}
+                  <OutfitFront outfit={outfit} health={health} animated={animated} />
+                  <CoverHooves show={coverEyes} />
+                </m.g>
+              </g>
 
               {health === "famished" && mood !== "sleeping" && <Hungry still={!animated} />}
               {health === "thriving" && mood !== "sleeping" && <Hearts still={!animated} />}
               {mood === "sleeping" && <Zzz still={!animated} />}
               {showSparkles && <Sparkles still={!animated} />}
               {mood === "munch" && <Coin still={!animated} />}
+              {golden && <GoldenGlints animated={animated} />}
+              {burst > 0 && animated && <UnlockFx key={burst} />}
             </svg>
           </m.div>
         </div>

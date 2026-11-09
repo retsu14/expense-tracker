@@ -29,6 +29,13 @@
       "when": 1793941801846,
       "tag": "0003_p1_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794212804554,
+      "tag": "0004_mascot",
+      "breakpoints": true
     }
   ]
 }

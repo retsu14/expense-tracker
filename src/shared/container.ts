@@ -14,6 +14,8 @@ import {
   drizzleUserRepository,
 } from "@/modules/identity/infrastructure/drizzle-identity.repositories";
 import { drizzleLedgerRepository } from "@/modules/ledger/infrastructure/drizzle-ledger.repository";
+import type { MascotDeps } from "@/modules/mascot/application/mascot.use-cases";
+import { drizzleMascotRepository } from "@/modules/mascot/infrastructure/drizzle-mascot.repository";
 import { db } from "@/shared/db/client";
 import { newId } from "@/shared/kernel/id";
 import { systemClock } from "@/shared/kernel/clock";
@@ -57,4 +59,11 @@ let analytics: AnalyticsDeps | undefined;
 export function analyticsDeps(): AnalyticsDeps {
   analytics ??= { analytics: drizzleAnalyticsRepository(db()), planning: planningDeps() };
   return analytics;
+}
+
+let mascot: MascotDeps | undefined;
+
+export function mascotDeps(): MascotDeps {
+  mascot ??= { mascot: drizzleMascotRepository(db()) };
+  return mascot;
 }

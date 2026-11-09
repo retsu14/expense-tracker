@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { PageHeader } from "@/components/layout/page-header";
 import { AiSettings } from "@/components/assistant/ai-settings";
 import { AvatarUploader } from "@/components/settings/avatar-uploader";
+import { BadgeShelf } from "@/components/settings/badge-shelf";
 import { AppLockSettings } from "@/components/settings/app-lock-settings";
 import { ChangePasswordForm } from "@/components/settings/change-password-form";
 import { InstallAppRow } from "@/components/pwa/install-prompt";
@@ -19,17 +20,21 @@ import { ThemeSwitcher } from "@/components/ui/theme-switcher";
 import { countRecoveryCodes, listSessions } from "@/modules/identity/application/account.use-cases";
 import { logoutAction } from "@/modules/identity/presentation/actions";
 import { requireUser } from "@/modules/identity/presentation/dal";
-import { identityDeps } from "@/shared/container";
+import { syncPigProgress } from "@/modules/mascot/application/mascot.use-cases";
+import { identityDeps, ledgerDeps, mascotDeps } from "@/shared/container";
 
 export const metadata: Metadata = { title: "Settings" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
   const deps = identityDeps();
-  const [sessions, remainingCodes] = await Promise.all([
+  const [sessions, remainingCodes, accounts] = await Promise.all([
     listSessions(deps, user.id, user.sessionId),
     countRecoveryCodes(deps, user.id),
+    ledgerDeps().ledger.listAccounts(user.id),
   ]);
+  const balance = accounts.reduce((sum, a) => sum + a.balance, 0);
+  const pig = await syncPigProgress(mascotDeps(), user.id, balance);
 
   return (
     <>
@@ -72,6 +77,18 @@ export default async function SettingsPage() {
           <div className="mt-5 border-t border-border pt-5">
             <InstallAppRow />
           </div>
+        </Card>
+
+        <Card id="badges" className="scroll-mt-20">
+          <CardHeader>
+            <CardTitle>Badges</CardTitle>
+          </CardHeader>
+          <BadgeShelf
+            pigName={user.pigName}
+            best={pig.progress.best}
+            balance={balance}
+            outfit={pig.progress.outfit}
+          />
         </Card>
 
         <Card>

@@ -21,6 +21,7 @@ import {
   transactionSummary,
 } from "@/modules/ledger/application/ledger.use-cases";
 import { EMPTY_FILTER } from "@/modules/ledger/domain/transaction-query";
+import { syncPigProgress } from "@/modules/mascot/application/mascot.use-cases";
 import { assessHealth } from "@/modules/mascot/domain/health";
 import { listDebts } from "@/modules/planning/application/debts.use-cases";
 import {
@@ -28,7 +29,7 @@ import {
   budgetOverview,
   listGoals,
 } from "@/modules/planning/application/planning.use-cases";
-import { analyticsDeps, ledgerDeps, planningDeps } from "@/shared/container";
+import { analyticsDeps, ledgerDeps, mascotDeps, planningDeps } from "@/shared/container";
 import { addDays } from "@/shared/kernel/time";
 
 function SeeAll({ href }: { href: string }) {
@@ -73,6 +74,7 @@ export default async function HomePage() {
     })
   ).filter((b) => b.status === "overdue" || b.status === "due_soon" || b.status === "upcoming");
   const balance = accounts.reduce((sum, a) => sum + a.balance, 0);
+  const pig = await syncPigProgress(mascotDeps(), user.id, balance);
   const net = month.income - month.expense;
   const topBudgets = overview.items.filter((i) => i.categoryId).slice(0, 3);
   const activeGoals = goals.filter((g) => g.status === "active");
@@ -104,6 +106,7 @@ export default async function HomePage() {
           report={health}
           budgetUsedPct={overview.usedPct}
           alertPct={overview.alertPct}
+          mascot={{ outfit: pig.progress.outfit, pending: pig.pending, next: pig.next }}
           className="lg:col-span-5 lg:row-span-2"
         />
 
