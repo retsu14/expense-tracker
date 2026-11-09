@@ -80,7 +80,6 @@ export default async function InsightsPage({ searchParams }: PageProps<"/insight
     <>
       <PageHeader
         title="Insights"
-        description="Where your money goes."
         actions={
           <>
             <Button asChild variant="ghost" size="sm">

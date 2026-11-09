@@ -105,7 +105,7 @@ export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: str
       </CardHeader>
       <div className="grid gap-4 md:grid-cols-2 md:gap-6">
         <div>
-          <h3 className="mb-2 text-caption tracking-wide text-fg-muted uppercase">Quick tips</h3>
+          <h3 className="mb-2 eyebrow">Quick tips</h3>
           {snapshot ? (
             <TipsList tips={ruleTips(snapshot)} />
           ) : error ? (
@@ -115,14 +115,14 @@ export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: str
           )}
         </div>
         <div className="grid content-start gap-3">
-          <h3 className="text-caption tracking-wide text-fg-muted uppercase">AI check-in</h3>
+          <h3 className="eyebrow">AI check-in</h3>
           {!ready ? (
             <p className="text-body-sm text-fg-muted">
               Turn on AI in{" "}
               <Link href="/settings#ai" className="underline underline-offset-4">
                 Settings
               </Link>{" "}
-              for a personal monthly check-in. It runs privately on your device.
+              for a monthly check-in.
             </p>
           ) : (
             <>
@@ -132,7 +132,7 @@ export function OinkTakeCard({ userId, pigName }: { userId: string; pigName: str
                   <RichText text={summary.text} />
                   {!busy && (
                     <p className="mt-2 text-caption text-fg-muted">
-                      Written by AI from your totals. Double-check before big decisions.
+                      AI-written. Double-check big decisions.
                     </p>
                   )}
                 </div>

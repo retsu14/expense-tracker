@@ -12,10 +12,7 @@ export default async function ImportPage() {
   const accounts = await ledgerDeps().ledger.listAccounts(user.id);
   return (
     <>
-      <PageHeader
-        title="Import transactions"
-        description="Bring in a CSV from your bank, GCash or a spreadsheet."
-      />
+      <PageHeader title="Import transactions" description="CSV from your bank, GCash or a sheet." />
       <ImportWizard accounts={accounts.map((a) => ({ id: a.id, name: a.name }))} />
     </>
   );

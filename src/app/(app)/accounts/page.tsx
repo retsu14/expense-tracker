@@ -13,7 +13,7 @@ export default async function AccountsPage() {
 
   return (
     <>
-      <PageHeader title="Accounts" description="Cash, e-wallets, banks and cards." />
+      <PageHeader title="Accounts" />
       <AccountsManager accounts={accounts} />
     </>
   );

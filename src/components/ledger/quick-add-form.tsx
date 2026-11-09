@@ -337,7 +337,7 @@ export function QuickAddForm({
 
       {!editing && templates.length > 0 && (
         <div className="grid gap-2">
-          <p className="text-caption text-fg-muted">Favorites · tap to log instantly</p>
+          <p className="text-caption text-fg-muted">Favorites</p>
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
             {templates.map((t) => (
               <Chip

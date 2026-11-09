@@ -198,15 +198,11 @@ function WebllmPanel() {
         <p className="flex gap-2 rounded-md bg-warning/15 p-3 text-body-sm">
           <TriangleAlert className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden />
           <span>
-            This browser can&apos;t run AI on-device (it needs WebGPU: recent Chrome, Edge or
-            Safari). Try <strong>Ollama</strong> on a computer instead.
+            This browser can&apos;t run on-device AI. Try <strong>Ollama</strong> instead.
           </span>
         </p>
       ) : (
-        <p className="text-body-sm text-fg-muted">
-          Downloads once, then runs offline in this browser. Use Wi-Fi for big downloads.
-          {!f16 && " Your GPU gets the compatible build, which uses a bit more memory."}
-        </p>
+        <p className="text-body-sm text-fg-muted">Downloads once, then works offline. Use Wi-Fi.</p>
       )}
       <ul className="grid gap-2">
         {WEBLLM_MODELS.map((m) => {
@@ -477,8 +473,7 @@ function OllamaPanel() {
             )}
             {models.some((m) => m.cloud) && (
               <p className="text-caption text-fg-muted">
-                Cloud models send your data to Ollama&apos;s servers. Pick a local one to keep it
-                private.
+                Cloud models aren&apos;t private. Prefer a local one.
               </p>
             )}
           </section>
@@ -569,8 +564,7 @@ export function AiSettings({ pigName }: { pigName: string }) {
           <div>
             <Label htmlFor="ai-enabled">Smart {pigName}</Label>
             <p className="text-caption font-normal text-fg-muted">
-              Optional AI for chat, insights and quick entry. Runs on your device, so your data
-              stays private.
+              Optional. Runs privately on your device.
             </p>
           </div>
         </div>

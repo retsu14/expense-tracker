@@ -29,7 +29,7 @@ describe("assessHealth", () => {
     const r = assessHealth({ ...fine, budgetUsedPct: 90, overBudget: ["Food"], overdueBills: 1 });
     expect(r.score).toBe(65);
     expect(r.level).toBe("healthy");
-    expect(r.reasons[0]?.text).toBe("Budget is 90% used");
+    expect(r.reasons[0]?.text).toBe("90% of budget used");
     expect(assessHealth({ ...fine, budgetUsedPct: 105, overBudget: ["Food"] }).level).toBe(
       "healthy",
     );
@@ -50,7 +50,7 @@ describe("assessHealth", () => {
     });
     expect(r.score).toBe(0);
     expect(r.level).toBe("famished");
-    expect(r.reasons.length).toBeLessThanOrEqual(4);
+    expect(r.reasons.length).toBeLessThanOrEqual(3);
   });
 
   it("stays neutral without data", () => {

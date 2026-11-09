@@ -25,10 +25,7 @@ export function NotificationList({ items }: { items: Notification[] }) {
 
   if (items.length === 0) {
     return (
-      <EmptyState
-        title="You're all caught up"
-        description="Budget alerts, bill reminders and goal wins will show up here."
-      />
+      <EmptyState title="You're all caught up" description="Alerts and reminders show up here." />
     );
   }
 

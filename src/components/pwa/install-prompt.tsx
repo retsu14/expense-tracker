@@ -54,7 +54,7 @@ export function IosInstallHelp({
         </li>
         <li className="flex items-center gap-3">
           <PigMark className="size-6 shrink-0" />
-          Open Oink from your Home Screen like any app.
+          Open it from your Home Screen.
         </li>
       </ol>
     </ResponsiveModal>
@@ -101,9 +101,7 @@ export function InstallPrompt() {
           <PigMark className="size-11 shrink-0" />
           <div className="min-w-0 flex-1">
             <p className="font-semibold">Install Oink</p>
-            <p className="text-caption font-normal text-fg-muted">
-              One tap from your home screen. Works offline too.
-            </p>
+            <p className="text-caption font-normal text-fg-muted">Works offline, one tap away.</p>
           </div>
           <Button
             size="sm"

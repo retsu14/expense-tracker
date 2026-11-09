@@ -70,7 +70,7 @@ export function BudgetsView({
           </>
         ) : (
           <p className="mt-2 text-body text-fg-muted">
-            Add an overall budget to see how much you can spend each day.
+            Add an overall budget to see your daily limit.
           </p>
         )}
         {overview.nextPayday && (
@@ -143,7 +143,7 @@ export function BudgetsView({
         {categoryItems.length === 0 ? (
           <EmptyState
             title="No category budgets"
-            description="Budget the categories you overspend on, like Food or Shopping. Tap Suggest to use your past spending."
+            description="Set limits for categories like Food. Tap Suggest to start from your spending."
           />
         ) : (
           <ul className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -187,7 +187,7 @@ export function BudgetsView({
         open={suggesting}
         onOpenChange={setSuggesting}
         title="Suggested budgets"
-        description="Based on your average spending over the last 3 months."
+        description="Based on your last 3 months."
       >
         {suggesting && (
           <Suggestions
@@ -387,7 +387,7 @@ function BudgetForm({
         <div>
           <Label htmlFor="b-rollover">Roll over leftovers</Label>
           <p className="text-caption font-normal text-fg-muted">
-            Unused money (or overspending) carries into the next period.
+            Leftovers or overspending carry over.
           </p>
         </div>
         <Switch id="b-rollover" checked={rollover} onCheckedChange={setRollover} />
@@ -436,7 +436,7 @@ function Suggestions({ onDone }: { onDone: () => void }) {
   if (list.length === 0) {
     return (
       <p className="text-body-sm text-fg-muted">
-        Not enough spending history yet. Log a few weeks of expenses and come back.
+        Not enough history yet. Check back in a few weeks.
       </p>
     );
   }

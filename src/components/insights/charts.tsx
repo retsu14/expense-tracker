@@ -176,7 +176,7 @@ export function ForecastChart({
   return (
     <ChartCard
       title="Cash flow forecast"
-      subtitle={`Next 30 days · bills, income and about ${money.full(avgDailySpend)}/day spending`}
+      subtitle={`Next 30 days · ~${money.full(avgDailySpend)}/day`}
       chart={
         <div className="grid gap-3">
           <p className={cn("text-body-sm", short ? "text-expense" : "text-fg-muted")}>

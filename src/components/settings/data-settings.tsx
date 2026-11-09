@@ -17,10 +17,7 @@ function DeleteForm({ username }: { username: string }) {
   const { formProps, pending, fieldError, formError } = useFormAction(deleteAccountAction);
   return (
     <form {...formProps} className="grid gap-4" noValidate>
-      <FormAlert>
-        This permanently deletes your wallets, transactions, budgets, bills, goals and avatar. It
-        can&apos;t be undone. Export a backup first if you might want your data.
-      </FormAlert>
+      <FormAlert>This deletes all your data for good. Export a backup first.</FormAlert>
       {formError && <FormAlert>{formError}</FormAlert>}
       <Field
         id="confirmUsername"

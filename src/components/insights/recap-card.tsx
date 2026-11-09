@@ -94,9 +94,7 @@ export function RecapCard({
   return (
     <article className="grid gap-5 overflow-hidden rounded-xl border border-border bg-surface p-6 text-center">
       <header>
-        <p className="text-caption tracking-wide text-fg-muted uppercase">
-          Oink recap{recap.complete ? "" : " · so far"}
-        </p>
+        <p className="eyebrow">Oink recap{recap.complete ? "" : " · so far"}</p>
         <h1 className="font-brand text-h1">{monthName}</h1>
       </header>
       <div className="flex h-36 justify-center pt-4">
