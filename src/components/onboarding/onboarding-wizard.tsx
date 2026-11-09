@@ -4,7 +4,7 @@ import { ArrowLeft, Check, Plus, Trash2 } from "lucide-react";
 import { useState, useTransition } from "react";
 
 import { FormAlert } from "@/components/forms/form-alert";
-import { Pig } from "@/components/pig/pig";
+import { PigWithBubble } from "@/components/pig/pig-with-bubble";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -133,8 +133,8 @@ export function OnboardingWizard({ name, pigName }: { name: string; pigName: str
 
       {step === 0 && (
         <section className="grid gap-6 text-center">
-          <div className="flex justify-center pt-12">
-            {mounted && <Pig size={160} mood="happy" name={pigName} />}
+          <div className="flex min-h-56 justify-center pt-4">
+            {mounted && <PigWithBubble size={160} mood="happy" name={pigName} />}
           </div>
           <div>
             <h1 className="text-h1-sm">

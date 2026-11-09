@@ -1,4 +1,4 @@
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 import { RecentTransactions } from "@/components/activity/recent-transactions";
@@ -11,6 +11,7 @@ import { GoalPig } from "@/components/plan/goal-pig";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProgressBar } from "@/components/ui/progress-bar";
+import { Ring } from "@/components/ui/ring";
 import { formatPeso } from "@/lib/money";
 import { cn } from "@/lib/utils";
 import { cashflowForecast } from "@/modules/analytics/application/analytics.use-cases";
@@ -40,6 +41,14 @@ function SeeAll({ href }: { href: string }) {
     </Link>
   );
 }
+
+const paydayLabel = (ymd: string) =>
+  new Intl.DateTimeFormat("en-PH", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(`${ymd}T12:00:00Z`));
 
 const dueText = (status: string, days: number) =>
   status === "overdue" ? "Overdue" : days === 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days}d`;
@@ -101,13 +110,44 @@ export default async function HomePage() {
         <Card className="lg:col-span-7">
           {safe ? (
             <>
-              <p className="text-body-sm text-fg-muted">Safe to spend today</p>
-              <Amount value={safe.perDay} className="mt-1 block text-display-sm md:text-display" />
-              <p className="mt-1 text-body-sm text-fg-muted">
-                for the next {safe.daysLeft} {safe.daysLeft === 1 ? "day" : "days"}
-                {overview.overall &&
-                  ` · ${formatPeso(Math.max(0, overview.overall.remaining))} of ${formatPeso(overview.overall.limit)} left`}
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-body-sm text-fg-muted">Safe to spend today</p>
+                  <Amount
+                    value={safe.perDay}
+                    className="mt-1 block text-display-sm md:text-display"
+                  />
+                  <p className="mt-1 text-body-sm text-fg-muted">
+                    for the next {safe.daysLeft} {safe.daysLeft === 1 ? "day" : "days"}
+                  </p>
+                </div>
+                {overview.overall && (
+                  <Ring
+                    value={overview.overall.pct}
+                    status={overview.overall.status}
+                    label={`${String(Math.round(overview.overall.pct))}% of the monthly budget used`}
+                    caption="used"
+                  />
+                )}
+              </div>
+              <ul className="mt-3 flex flex-wrap gap-2 text-caption">
+                {overview.overall && (
+                  <li className="rounded-full bg-surface-2 px-2.5 py-1">
+                    <span className="font-semibold tabular">
+                      {formatPeso(Math.max(0, overview.overall.remaining))}
+                    </span>{" "}
+                    <span className="text-fg-muted">
+                      left of {formatPeso(overview.overall.limit)}
+                    </span>
+                  </li>
+                )}
+                {overview.nextPayday && (
+                  <li className="rounded-full bg-surface-2 px-2.5 py-1">
+                    <span className="text-fg-muted">Payday</span>{" "}
+                    <span className="font-semibold">{paydayLabel(overview.nextPayday)}</span>
+                  </li>
+                )}
+              </ul>
             </>
           ) : (
             <>
@@ -125,7 +165,18 @@ export default async function HomePage() {
             <div>
               <dt className="text-caption text-fg-muted">{safe ? "Balance" : "Spent"}</dt>
               <dd className="mt-0.5 font-semibold">
-                <Amount value={safe ? balance : month.expense} />
+                {safe ? (
+                  <Link
+                    href="/accounts"
+                    className="inline-flex items-center gap-1 underline-offset-4 hover:underline"
+                  >
+                    <Amount value={balance} />
+                    <ChevronRight className="size-3.5 text-fg-muted" aria-hidden />
+                    <span className="sr-only">View accounts</span>
+                  </Link>
+                ) : (
+                  <Amount value={month.expense} />
+                )}
               </dd>
             </div>
             <div>

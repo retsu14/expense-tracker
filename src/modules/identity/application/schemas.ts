@@ -63,10 +63,3 @@ export const profileSchema = z.object({
 
 export const AVATAR_TYPES = ["image/webp", "image/jpeg", "image/png"] as const;
 export const AVATAR_MAX_BYTES = 2 * 1024 * 1024;
-
-export const avatarUploadSchema = z.object({
-  contentType: z.enum(AVATAR_TYPES),
-  size: z.number().int().positive().max(AVATAR_MAX_BYTES, "Image must be 2 MB or smaller."),
-});
-
-export const avatarConfirmSchema = z.object({ key: z.string().min(1).max(200) });

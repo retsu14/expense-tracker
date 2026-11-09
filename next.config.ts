@@ -12,6 +12,7 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  experimental: { serverActions: { bodySizeLimit: "2.1mb" } },
   // Vercel packages the app itself; its build lacks the server trace standalone copying needs
   ...(process.env.VERCEL ? {} : { output: "standalone" as const }),
   headers() {

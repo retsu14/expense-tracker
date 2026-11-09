@@ -6,8 +6,6 @@ import { refresh } from "next/cache";
 
 import {
   changePassword,
-  confirmAvatar,
-  createAvatarUpload,
   deleteAccount,
   listSessions,
   regenerateRecoveryCodes,
@@ -15,6 +13,7 @@ import {
   revokeOtherSessions,
   revokeSession,
   updateProfile,
+  uploadAvatar,
 } from "@/modules/identity/application/account.use-cases";
 import {
   checkUsernameAvailability,
@@ -141,17 +140,13 @@ export async function revokeOtherSessionsAction(): Promise<ActionResult> {
   });
 }
 
-export async function createAvatarUploadAction(input: { contentType: string; size: number }) {
+export async function uploadAvatarAction(form: FormData) {
   return runAction(async () => {
     const user = await requireUser();
-    return createAvatarUpload(identityDeps(), user.id, input);
-  });
-}
-
-export async function confirmAvatarAction(key: string) {
-  return runAction(async () => {
-    const user = await requireUser();
-    const res = await confirmAvatar(identityDeps(), user.id, { key });
+    const file = form.get("file");
+    const bytes =
+      file instanceof Blob ? new Uint8Array(await file.arrayBuffer()) : new Uint8Array();
+    const res = await uploadAvatar(identityDeps(), user.id, bytes);
     if (res.ok) refresh();
     return res;
   });

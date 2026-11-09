@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 
 import { Pig } from "@/components/pig/pig";
+import { PigWithBubble } from "@/components/pig/pig-with-bubble";
 import { PigMark } from "@/components/pig/pig-mark";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -152,9 +153,7 @@ export function AssistantChat({ userId, pigName }: { userId: string; pigName: st
       <div className="grid gap-4" aria-live="polite" aria-busy={busy}>
         {messages.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-6 text-center">
-            <div className="h-32 pt-2">
-              <Pig size={110} mood="happy" name={pigName} />
-            </div>
+            <PigWithBubble size={110} mood="happy" name={pigName} />
             <h2 className="text-h3">Hi! Ask me anything about your money.</h2>
             <p className="text-body-sm text-fg-muted">
               I only see totals and summaries, never your passwords or full history.

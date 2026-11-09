@@ -1,3 +1,4 @@
+import { sniffImageType } from "@/modules/identity/domain/image";
 import { validatePassword } from "@/modules/identity/domain/password";
 import {
   type PublicUser,
@@ -13,8 +14,6 @@ import type { IdentityDeps } from "./deps";
 import {
   AVATAR_MAX_BYTES,
   AVATAR_TYPES,
-  avatarConfirmSchema,
-  avatarUploadSchema,
   changePasswordSchema,
   confirmPasswordSchema,
   deleteAccountSchema,
@@ -124,42 +123,22 @@ export async function updateProfile(
   return ok(toPublicUser(user));
 }
 
-export async function createAvatarUpload(
+export async function uploadAvatar(
   deps: IdentityDeps,
   userId: string,
-  input: unknown,
-): Promise<Result<{ key: string; url: string; headers: Record<string, string> }>> {
-  const parsed = parse(avatarUploadSchema, input);
-  if (!parsed.ok) return parsed;
-
-  const { contentType, size } = parsed.value;
-  const key = `avatars/${userId}/${deps.newId()}.${EXT[contentType]}`;
-  const upload = await deps.storage.createUploadUrl(key, contentType, size);
-  return ok({ key, ...upload });
-}
-
-export async function confirmAvatar(
-  deps: IdentityDeps,
-  userId: string,
-  input: unknown,
+  bytes: Uint8Array,
 ): Promise<Result<string>> {
-  const parsed = parse(avatarConfirmSchema, input);
-  if (!parsed.ok) return parsed;
-
-  const { key } = parsed.value;
-  const invalid = err(new DomainError("invalid_upload", "Upload failed. Please try again."));
-  if (!key.startsWith(`avatars/${userId}/`) || key.includes("..")) return invalid;
-
-  const object = await deps.storage.head(key);
-  const typeOk = AVATAR_TYPES.some((t) => t === object?.contentType);
-  if (!object || !typeOk || object.size > AVATAR_MAX_BYTES) {
-    if (object) await deps.storage.delete(key);
-    return invalid;
-  }
+  if (bytes.length === 0 || bytes.length > AVATAR_MAX_BYTES)
+    return err(new DomainError("invalid_upload", "Image must be 2 MB or smaller."));
+  const type = sniffImageType(bytes);
+  if (!type || !AVATAR_TYPES.includes(type))
+    return err(new DomainError("invalid_upload", "Please choose a PNG, JPEG or WebP image."));
 
   const user = await deps.users.findById(userId);
   if (!user) return notFound();
 
+  const key = `avatars/${userId}/${deps.newId()}.${EXT[type]}`;
+  await deps.storage.put(key, bytes, type);
   await deps.users.updateAvatar(userId, key);
   if (user.avatarKey && user.avatarKey !== key) {
     await deps.storage.delete(user.avatarKey).catch(() => undefined);
@@ -196,4 +175,11 @@ export async function deleteAccount(
   if (user.avatarKey) await deps.storage.delete(user.avatarKey).catch(() => undefined);
   await deps.users.delete(userId);
   return ok(undefined);
+}
+
+const AVATAR_FILE = /^[a-z0-9-]{1,64}\.(webp|jpg|png)$/i;
+
+export async function readAvatar(deps: IdentityDeps, userId: string, file: string) {
+  if (!AVATAR_FILE.test(file)) return null;
+  return deps.storage.get(`avatars/${userId}/${file}`);
 }

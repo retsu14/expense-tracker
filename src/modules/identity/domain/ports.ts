@@ -51,12 +51,10 @@ export type RateLimiter = {
 };
 
 export type MediaStorage = {
-  createUploadUrl(
+  put(key: string, body: Uint8Array, contentType: string): Promise<void>;
+  get(
     key: string,
-    contentType: string,
-    size: number,
-  ): Promise<{ url: string; headers: Record<string, string> }>;
-  head(key: string): Promise<{ size: number; contentType: string } | null>;
+  ): Promise<{ body: ReadableStream<Uint8Array>; contentType: string; size: number } | null>;
   delete(key: string): Promise<void>;
   publicUrl(key: string): Promise<string>;
 };

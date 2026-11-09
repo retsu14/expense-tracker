@@ -66,6 +66,7 @@ type PigProps = {
   listen?: boolean;
   name?: string;
   className?: string;
+  onSay?: ((text: string) => void) | undefined;
 };
 
 export function Pig({
@@ -77,6 +78,7 @@ export function Pig({
   listen = false,
   name = "Oink",
   className,
+  onSay,
 }: PigProps) {
   const storeMood = useMascotStore((s) => s.mood);
   const mood = moodProp ?? storeMood;
@@ -103,6 +105,10 @@ export function Pig({
   const stroke = useRef({ distance: 0, last: 0 });
 
   const say = (text: string) => {
+    if (onSay) {
+      onSay(text);
+      return;
+    }
     clearTimeout(bubbleTimer.current);
     setBubble({ key: Date.now(), text });
     bubbleTimer.current = setTimeout(() => {
@@ -115,13 +121,17 @@ export function Pig({
     return useMascotStore.subscribe((state, prev) => {
       const msg = state.message;
       if (!msg || msg === prev.message) return;
+      if (onSay) {
+        onSay(msg.text);
+        return;
+      }
       clearTimeout(bubbleTimer.current);
       setBubble({ key: msg.id, text: msg.text });
       bubbleTimer.current = setTimeout(() => {
         setBubble(null);
       }, BUBBLE_MS);
     });
-  }, [listen]);
+  }, [listen, onSay]);
 
   useEffect(() => {
     if (!animated) return;
@@ -232,13 +242,15 @@ export function Pig({
 
   return (
     <div className={cn("relative inline-flex", className)} style={{ width: size, height: size }}>
-      <SpeechBubble
-        text={bubble?.text ?? null}
-        bubbleKey={bubble?.key ?? 0}
-        onDismiss={() => {
-          setBubble(null);
-        }}
-      />
+      {!onSay && (
+        <SpeechBubble
+          text={bubble?.text ?? null}
+          bubbleKey={bubble?.key ?? 0}
+          onDismiss={() => {
+            setBubble(null);
+          }}
+        />
+      )}
       <m.div
         className={cn(
           "size-full touch-manipulation rounded-full outline-offset-4 select-none",
