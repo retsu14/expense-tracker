@@ -18,6 +18,7 @@
   --warning: #e3b96a;
   --pig: #f4a7b9;
   --pig-blush: #e8879e;
+  --pig-ink: #f4a7b9;
   --ring: #e8e2d6;
   --overlay: rgb(0 0 0 / 0.6);
   --series-1: #3987e5;
@@ -31,6 +32,7 @@
 }
 
 .light {
+  --pig-ink: #b23a5e;
   color-scheme: light;
   --bg: #f6f3ee;
   --surface: #e8e2d6;
@@ -69,6 +71,7 @@
   --color-warning: var(--warning);
   --color-pig: var(--pig);
   --color-pig-blush: var(--pig-blush);
+  --color-pig-ink: var(--pig-ink);
   --color-ring: var(--ring);
   --color-overlay: var(--overlay);
   --color-series-1: var(--series-1);

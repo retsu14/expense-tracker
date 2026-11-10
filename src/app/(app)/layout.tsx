@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { AppShell } from "@/components/layout/app-shell";
@@ -6,6 +7,8 @@ import { getSettings } from "@/modules/ledger/application/ledger.use-cases";
 import { maybeSyncPlanning } from "@/modules/planning/presentation/sync";
 import { unreadNotifications } from "@/modules/planning/application/planning.use-cases";
 import { ledgerDeps, planningDeps } from "@/shared/container";
+
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();

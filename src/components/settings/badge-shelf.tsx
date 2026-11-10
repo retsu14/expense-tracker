@@ -48,7 +48,7 @@ export function BadgeShelf({
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="@container grid gap-4">
       <div className="flex items-center gap-4">
         <div className="relative size-24 shrink-0">
           <span
@@ -68,7 +68,7 @@ export function BadgeShelf({
         </div>
       </div>
 
-      <ul ref={scope} className="grid grid-cols-2 gap-2 xs:grid-cols-4">
+      <ul ref={scope} className="grid grid-cols-2 gap-2 @lg:grid-cols-4">
         {MILESTONES.map((ms, i) => {
           const unlocked = best >= ms.amount;
           const wearing = worn === ms.id;
@@ -124,7 +124,7 @@ export function BadgeShelf({
                   {ms.name}
                   {!unlocked && <span className="sr-only"> (locked)</span>}
                 </span>
-                <span className="text-caption text-fg-muted tabular">
+                <span className="text-caption whitespace-nowrap text-fg-muted tabular">
                   {unlocked
                     ? formatPeso(ms.amount, { whole: true })
                     : `${formatPeso(togo, { whole: true })} to go`}

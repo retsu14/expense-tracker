@@ -6,7 +6,7 @@ import { requireUser } from "@/modules/identity/presentation/dal";
 import { getSettings } from "@/modules/ledger/application/ledger.use-cases";
 import { ledgerDeps } from "@/shared/container";
 
-export const metadata: Metadata = { title: "Welcome" };
+export const metadata: Metadata = { title: "Welcome", robots: { index: false, follow: false } };
 
 export default async function OnboardingPage() {
   const user = await requireUser();

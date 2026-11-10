@@ -3,7 +3,11 @@ import Link from "next/link";
 
 import { LoginForm } from "@/components/auth/login-form";
 
-export const metadata: Metadata = { title: "Sign in" };
+export const metadata: Metadata = {
+  title: "Sign in",
+  description: "Sign in to Oink, the free expense and budget tracker for the Philippines.",
+  alternates: { canonical: "/login" },
+};
 
 const NOTICES: Record<string, string> = {
   expired: "Your session ended. Please sign in again.",
