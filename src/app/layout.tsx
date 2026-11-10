@@ -3,6 +3,7 @@ import { Fredoka, Plus_Jakarta_Sans } from "next/font/google";
 import { headers } from "next/headers";
 
 import { Providers } from "@/components/providers";
+import { SITE, SITE_URL } from "@/lib/site";
 
 import "./globals.css";
 
@@ -20,9 +21,34 @@ const fredoka = Fredoka({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Oink", template: "%s · Oink" },
-  description: "Track expenses, plan budgets and save with Oink the pig.",
-  applicationName: "Oink",
+  metadataBase: new URL(SITE_URL),
+  title: { default: SITE.title, template: "%s · Oink" },
+  description: SITE.description,
+  applicationName: SITE.name,
+  keywords: [...SITE.keywords],
+  category: "finance",
+  creator: SITE.name,
+  publisher: SITE.name,
+  openGraph: {
+    type: "website",
+    siteName: SITE.name,
+    title: SITE.title,
+    description: SITE.description,
+    url: "/",
+    locale: SITE.locale,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE.title,
+    description: SITE.description,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 },
+  },
+  appleWebApp: { capable: true, title: SITE.name, statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false, email: false, address: false },
 };
 
 export const viewport: Viewport = {

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 
 import { OfflineView } from "@/components/pwa/offline-view";
 
-export const metadata: Metadata = { title: "Offline" };
+export const metadata: Metadata = { title: "Offline", robots: { index: false } };
 export const dynamic = "force-static";
 
 export default function OfflinePage() {

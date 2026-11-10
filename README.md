@@ -176,6 +176,8 @@ drizzle/                 SQL migrations
 
 **Vercel** — import the repo, add the environment variables above, then run migrations against the production database. No extra build settings are needed.
 
+**Search and sharing** — signed-out visitors get a landing page at `/` with Open Graph images, JSON-LD (app, organization and FAQ), `sitemap.xml`, `robots.txt`, and `llms.txt` / `llms-full.txt` for AI search. Set `APP_URL` to your public domain so all of these use it (on Vercel it falls back to the production domain).
+
 **Docker** — the `production` stage builds a standalone server:
 
 ```bash

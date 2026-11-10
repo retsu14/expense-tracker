@@ -4,7 +4,11 @@ import Link from "next/link";
 import { RegisterForm } from "@/components/auth/register-form";
 import { FormAlert } from "@/components/forms/form-alert";
 
-export const metadata: Metadata = { title: "Create account" };
+export const metadata: Metadata = {
+  title: "Create a free account",
+  description: "Start tracking every peso in a minute. Free, no email needed, works offline.",
+  alternates: { canonical: "/register" },
+};
 
 export default async function RegisterPage({ searchParams }: PageProps<"/register">) {
   const { deleted } = await searchParams;

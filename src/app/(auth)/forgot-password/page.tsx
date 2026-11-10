@@ -3,7 +3,7 @@ import Link from "next/link";
 
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
-export const metadata: Metadata = { title: "Reset password" };
+export const metadata: Metadata = { title: "Reset password", robots: { index: false } };
 
 export default function ForgotPasswordPage() {
   return (
